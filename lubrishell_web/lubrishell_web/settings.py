@@ -11,10 +11,13 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+load_dotenv(BASE_DIR / '.env')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -78,11 +81,11 @@ WSGI_APPLICATION = 'lubrishell_web.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'bd2026bx',
-        'USER': 'bd2026bx',
-        'PASSWORD': 'bd2026bx',
-        'HOST': 'plop.inf.udec.cl',
-        'PORT': '5432',
+        'NAME': os.getenv('DB_NAME', 'NOT_FOUND'),
+        'USER': os.getenv('DB_USER', 'NOT_FOUND'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'NOT_FOUND'),
+        'HOST': os.getenv('DB_HOST', 'NOT_FOUND'),
+        'PORT': os.getenv('DB_PORT', 'NOT_FOUND'),
     }
 }
 
