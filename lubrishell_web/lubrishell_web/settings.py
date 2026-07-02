@@ -77,8 +77,12 @@ WSGI_APPLICATION = 'lubrishell_web.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'bd2026bx',
+        'USER': 'bd2026bx',
+        'PASSWORD': 'bd2026bx',
+        'HOST': 'plop.inf.udec.cl',
+        'PORT': '5432',
     }
 }
 
