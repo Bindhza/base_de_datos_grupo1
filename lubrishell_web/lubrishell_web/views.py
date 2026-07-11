@@ -1,21 +1,35 @@
 from django.db import connection
 from django.http import JsonResponse
 
+from .utils import dictfetchall
+
 def test_categoria(request):
     with connection.cursor() as cursor:
-        # 1. Hacemos la consulta SQL apuntando a tu esquema y tabla
+        # Hacemos la consulta
         cursor.execute('SELECT * FROM lubrishell.Categoria;')
-        
-        # 2. Obtenemos todos los registros (filas)
-        filas = cursor.fetchall()
-        
-        # 3. TRUCO PRO: Obtenemos los nombres de las columnas automáticamente
-        columnas = [col[0] for col in cursor.description]
-        
-        # 4. Juntamos las columnas con los valores para armar diccionarios
-        datos = []
-        for fila in filas:
-            datos.append(dict(zip(columnas, fila)))
+        datos = dictfetchall(cursor)
             
-    # 5. Devolvemos la respuesta en formato JSON
     return JsonResponse(datos, safe=False)
+
+def ver_productos(request):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            'SELECT p.nombre, p.url_imagen, p.SKU, p.marca, p.stock FROM lubrishell.Producto p;'
+        )
+        datos = dictfetchall(cursor)
+    return JsonResponse(datos, safe=False)
+
+def ver_detalle_producto(request, sku):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            'SELECT * '
+            'FROM lubrishell.Producto p '
+            'WHERE p.sku = %s',
+            [sku]
+        )
+        datos = dictfetchall(cursor)
+    
+    if not datos:
+        return JsonResponse({'error': 'Producto no encontrado'}, status=404)
+    
+    return JsonResponse(datos[0], safe=False)  
