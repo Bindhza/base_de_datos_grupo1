@@ -1,0 +1,92 @@
+.grid-productos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 24px;
+}
+
+.card-producto {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  background: #ffffff;
+  border: 1px solid #e2e5ea;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.card-producto:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(15, 40, 70, 0.12);
+  border-color: #2b5f8a;
+}
+
+.card-producto-imagen {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: #f2f4f7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-producto-imagen img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 12px;
+}
+
+.sin-imagen {
+  color: #9aa4b2;
+  font-size: 0.85rem;
+}
+
+.badge-agotado {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #d94e3f;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.card-producto-info {
+  padding: 12px 14px 16px;
+}
+
+.card-producto-marca {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #d97f2b;
+  margin-bottom: 4px;
+}
+
+.card-producto-nombre {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1c2b3a;
+  line-height: 1.3;
+}
+
+.estado-info,
+.estado-error {
+  padding: 40px 24px;
+  text-align: center;
+  font-size: 0.95rem;
+  color: #5a6472;
+}
+
+.estado-error {
+  color: #d94e3f;
+}
