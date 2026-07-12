@@ -1,0 +1,131 @@
+.registro-contenedor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 40px 20px;
+}
+
+.registro-form {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border: 1px solid #e2e5ea;
+  border-radius: 12px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.registro-form h1 {
+  margin: 0 0 8px;
+  font-size: 1.4rem;
+  color: #1c2b3a;
+  text-align: center;
+}
+
+.registro-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3d4a58;
+}
+
+.registro-label input,
+.registro-label select {
+  padding: 10px 12px;
+  border: 1px solid #d5dae1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: #fff;
+}
+
+.registro-label input:focus,
+.registro-label select:focus {
+  outline: none;
+  border-color: #2b5f8a;
+}
+
+.selector-fecha {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+  gap: 8px;
+}
+
+.selector-fecha select {
+  padding: 10px 8px;
+  border: 1px solid #d5dae1;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: #fff;
+}
+
+.selector-fecha select:focus {
+  outline: none;
+  border-color: #2b5f8a;
+}
+
+.telefono-grupo {
+  display: flex;
+  align-items: stretch;
+}
+
+.telefono-prefijo {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: #eef1f4;
+  border: 1px solid #d5dae1;
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  color: #5a6472;
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.telefono-grupo input {
+  border-radius: 0 8px 8px 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.registro-error {
+  margin: 0;
+  color: #d94e3f;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.registro-exito {
+  margin: 0;
+  color: #2f8a4e;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.registro-boton {
+  margin-top: 8px;
+  background: #2b5f8a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.registro-boton:hover:not(:disabled) {
+  background: #1f4a6e;
+}
+
+.registro-boton:disabled {
+  background: #c7ccd4;
+  cursor: not-allowed;
+}

@@ -1,7 +1,39 @@
-from django.db import connection
+from django.db import connection,transaction, IntegrityError
 from django.http import JsonResponse
-
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import check_password
+from django.views.decorators.csrf import csrf_exempt
 from .utils import dictfetchall
+from .auth_utils import generar_token
+from .decorators import login_requerido, rol_requerido
+
+@csrf_exempt
+def login(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    rut = request.POST.get('rut')
+    password = request.POST.get('contrasena')
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            'SELECT u.contrasena FROM lubrishell.Usuario u WHERE RUT = %s',
+            [rut]
+        )
+        fila = cursor.fetchone()
+
+    if fila is None or not check_password(password, fila[0]):
+        return JsonResponse({'error': 'RUT o contraseña incorrectos'}, status=401)
+
+    # Determinar el rol: primero busca en Personal, si no está, es Cliente
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT rol FROM lubrishell.Personal WHERE RUT = %s', [rut])
+        fila_personal = cursor.fetchone()
+
+    rol = fila_personal[0] if fila_personal else 'cliente'
+
+    token = generar_token(rut, rol)
+    return JsonResponse({'token': token, 'rol': rol})
 
 def test_categoria(request):
     with connection.cursor() as cursor:
@@ -32,4 +64,63 @@ def ver_detalle_producto(request, sku):
     if not datos:
         return JsonResponse({'error': 'Producto no encontrado'}, status=404)
     
-    return JsonResponse(datos[0], safe=False)  
+    return JsonResponse(datos[0], safe=False) 
+@csrf_exempt
+def registrar_cliente(request):
+     rut = request.POST.get('rut')
+     numero_telefonico = request.POST.get('numero_telefonico')
+     correo_electronico = request.POST.get('correo_electronico')
+     fecha_nacimiento = request.POST.get('fecha_nacimiento')
+     contrasena = make_password(request.POST.get('password')) #la hasheamos
+     try:
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    'INSERT INTO lubrishell.Usuario '
+                    '(rut, numero_telefonico, correo_electronico, fecha_registro, contrasena, fecha_nacimiento) '
+                    'VALUES (%s, %s, %s, NOW(), %s, %s)',
+                    [rut, numero_telefonico, correo_electronico, contrasena, fecha_nacimiento]
+                )
+                cursor.execute(
+                    'INSERT INTO lubrishell.Cliente (rut) VALUES (%s)',
+                    [rut]
+                )
+
+        return JsonResponse({'mensaje': 'Cliente creado correctamente'}, status=201)
+
+     except IntegrityError:
+        return JsonResponse({'error': 'El RUT o correo ya están registrados'}, status=409)
+@csrf_exempt    
+@login_requerido
+@rol_requerido('administrador')     
+def registrar_personal(request):
+    rut = request.POST.get('rut')
+    telefono = request.POST.get('numero_telefonico')
+    correo = request.POST.get('correo_electronico')
+    password = request.POST.get('contrasena')
+    fecha_nacimiento = request.POST.get('fecha_nacimiento')
+    rol = request.POST.get('rol')
+
+    if rol not in ('vendedor', 'jefe_bodega', 'administrador'):
+        return JsonResponse({'error': 'Rol inválido'}, status=400)
+
+    contrasena_hasheada = make_password(password)
+
+    try:
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    'INSERT INTO lubrishell.Usuario '
+                    '(rut, numero_telefonico, correo_electronico, fecha_registro, contrasena, fecha_nacimiento) '
+                    'VALUES (%s, %s, %s, NOW(), %s, %s)',
+                    [rut, telefono, correo, contrasena_hasheada, fecha_nacimiento]
+                )
+                cursor.execute(
+                    'INSERT INTO lubrishell.Personal (rut, rol) VALUES (%s, %s)',
+                    [rut, rol]
+                )
+
+        return JsonResponse({'mensaje': 'Personal creado correctamente'}, status=201)
+
+    except IntegrityError:
+        return JsonResponse({'error': 'El RUT o correo ya están registrados'}, status=409)     

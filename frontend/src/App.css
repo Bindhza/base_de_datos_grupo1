@@ -63,6 +63,20 @@ body {
   color: #fff;
 }
 
+.app-sidebar-sesion {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.app-sidebar-sesion button.app-sidebar-link {
+  width: 100%;
+  background: none;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
 /* ---------- Contenido ---------- */
 
 .app-contenido {
