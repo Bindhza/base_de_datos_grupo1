@@ -2,7 +2,7 @@
 .env
 
 # Python
-__pycache__/
+lubrishell_web/__pycache__/
 *.pyc
 *.pyo
 *.pyd
