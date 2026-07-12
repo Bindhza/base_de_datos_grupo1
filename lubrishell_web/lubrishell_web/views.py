@@ -1,3 +1,4 @@
+import json
 from django.db import connection,transaction, IntegrityError
 from django.http import JsonResponse
 from django.contrib.auth.hashers import make_password
@@ -124,3 +125,55 @@ def registrar_personal(request):
 
     except IntegrityError:
         return JsonResponse({'error': 'El RUT o correo ya están registrados'}, status=409)     
+
+@csrf_exempt
+@login_requerido
+@rol_requerido('jefe_bodega')
+def actualizar_precio(request, sku):
+    if request.method not in ('POST', 'PUT'):
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    # Intentar obtener el precio de form-data o JSON body
+    nuevo_precio = request.POST.get('precio_venta')
+    if nuevo_precio is None:
+        try:
+            body = json.loads(request.body)
+            nuevo_precio = body.get('precio_venta')
+        except json.JSONDecodeError:
+            pass
+
+    if nuevo_precio is None:
+        return JsonResponse({'error': 'El campo precio_venta es requerido'}, status=400)
+
+    try:
+        nuevo_precio = int(nuevo_precio)
+        if nuevo_precio <= 0:
+            return JsonResponse({'error': 'El precio debe ser un número positivo mayor a 0'}, status=400)
+    except ValueError:
+        return JsonResponse({'error': 'El precio debe ser un número válido'}, status=400)
+
+    try:
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                # Validar existencia del producto
+                cursor.execute('SELECT 1 FROM lubrishell.Producto WHERE SKU = %s', [sku])
+                if not cursor.fetchone():
+                    return JsonResponse({'error': 'Producto no encontrado'}, status=404)
+
+                # Realizar actualización
+                cursor.execute(
+                    'UPDATE lubrishell.PrecioVenta '
+                    'SET precio_venta = %s, fecha_vigencia = NOW(), RUT_creador = %s '
+                    'WHERE SKU_producto = %s',
+                    [nuevo_precio, request.rut, sku]
+                )
+                
+                if cursor.rowcount == 0:
+                    return JsonResponse({'error': 'No existe un registro de precio base previo para actualizar'}, status=404)
+
+        return JsonResponse({'mensaje': 'Precio actualizado exitosamente'}, status=200)
+
+    except IntegrityError as e:
+        return JsonResponse({'error': 'Error de integridad en la base de datos'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': f'Error en el servidor: {str(e)}'}, status=500)
