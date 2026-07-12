@@ -3,8 +3,10 @@ import Categorias from './components/Categorias';
 import ListaProductos from './components/ListaProductos';
 import DetalleProducto from './components/DetalleProducto';
 import Login from './components/Login';
-import RegistrarPersonal from './components/RegistrarPersonal';
 import RegistrarCliente from './components/RegistrarCliente';
+import RegistrarPersonal from './components/RegistrarPersonal';
+import RegistrarProducto from './components/RegistrarProducto';
+import RegistrarMarca from './components/RegistrarMarca';
 import RutaProtegida from './components/RutaProtegida';
 import { useAuth } from './useAuth';
 import './App.css';
@@ -17,16 +19,16 @@ function Inicio() {
     </div>
   );
 }
- 
+
 function App() {
   const { estaLogueado, rol, logout } = useAuth();
- 
+
   return (
     <div className="app-layout">
       {/* ================= BARRA LATERAL (MENU) ================= */}
       <nav className="app-sidebar">
         <h2 className="app-sidebar-titulo">Lubrishell Admin</h2>
- 
+
         <ul className="app-sidebar-lista">
           <li>
             <NavLink
@@ -52,6 +54,7 @@ function App() {
           <li>
             <NavLink
               to="/productos"
+              end
               className={({ isActive }) =>
                 isActive ? 'app-sidebar-link app-sidebar-link-activo' : 'app-sidebar-link'
               }
@@ -59,7 +62,7 @@ function App() {
               🛢️ Ver Productos
             </NavLink>
           </li>
- 
+
           {/* Ejemplo de link visible solo para admin/jefe_bodega */}
           {(rol === 'administrador' || rol === 'jefe_bodega') && (
             <li>
@@ -69,11 +72,11 @@ function App() {
                   isActive ? 'app-sidebar-link app-sidebar-link-activo' : 'app-sidebar-link'
                 }
               >
-                ➕ Crear Producto
+                ➕ Registrar Producto
               </NavLink>
             </li>
           )}
- 
+
           {/* Solo administrador puede crear cuentas de personal */}
           {rol === 'administrador' && (
             <li>
@@ -88,7 +91,7 @@ function App() {
             </li>
           )}
         </ul>
- 
+
         <div className="app-sidebar-sesion">
           {estaLogueado ? (
             <button className="app-sidebar-link" onClick={logout}>
@@ -106,7 +109,7 @@ function App() {
           )}
         </div>
       </nav>
- 
+
       {/* ================= ÁREA DE CONTENIDO PRINCIPAL ================= */}
       <main className="app-contenido">
         <Routes>
@@ -116,17 +119,26 @@ function App() {
           <Route path="/categorias" element={<Categorias />} />
           <Route path="/productos" element={<ListaProductos />} />
           <Route path="/productos/:sku" element={<DetalleProducto />} />
- 
-          {/* Ejemplo de ruta protegida solo para ciertos roles */}
+
+          {/* Registro de producto: administrador y jefe_bodega */}
           <Route
             path="/productos/crear"
             element={
               <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
-                <div>Formulario de creación de producto (a implementar)</div>
+                <RegistrarProducto />
               </RutaProtegida>
             }
           />
- 
+
+          <Route
+            path="/productos/marcas/registrar"
+            element={
+              <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
+                <RegistrarMarca />
+              </RutaProtegida>
+            }
+          />
+
           {/* Solo administrador puede crear cuentas de personal */}
           <Route
             path="/personal/crear"
@@ -141,5 +153,5 @@ function App() {
     </div>
   );
 }
- 
+
 export default App;

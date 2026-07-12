@@ -38,7 +38,7 @@ def login(request):
     token = generar_token(rut, rol)
     return JsonResponse({'token': token, 'rol': rol})
 
-def test_categoria(request):
+def obtener_categorias(request):
     with connection.cursor() as cursor:
         # Hacemos la consulta
         cursor.execute('SELECT * FROM lubrishell.Categoria;')
@@ -46,10 +46,41 @@ def test_categoria(request):
             
     return JsonResponse(datos, safe=False)
 
+def obtener_marcas(request):
+    with connection.cursor() as cursor:
+        # Hacemos la consulta
+        cursor.execute('SELECT * FROM lubrishell.marca;')
+        datos = dictfetchall(cursor)
+            
+    return JsonResponse(datos, safe=False)
+
+@csrf_exempt    
+@login_requerido
+@rol_requerido('administrador','jefe_bodega')   
+def registrar_marca(request):
+     nombre_marca = request.POST.get('nombre_marca').lower()
+
+     try:
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    'INSERT INTO lubrishell.marca '
+                    '(nombre_marca)'
+                    'VALUES (%s)',
+                    [nombre_marca]
+                )
+
+        return JsonResponse({'mensaje': 'Marca registrada correctamente'}, status=201)
+
+     except IntegrityError:
+        return JsonResponse({'error': 'La marca ya existía'}, status=409)
+         
 def ver_productos(request):
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT p.nombre, p.url_imagen, p.SKU, p.marca, p.stock FROM lubrishell.Producto p;'
+          'SELECT p.sku, p.nombre, p.url_imagen, m.nombre_marca AS marca, p.stock '
+            'FROM lubrishell.Producto p '
+            'JOIN lubrishell.Marca m ON p.id_marca = m.id_marca;'
         )
         datos = dictfetchall(cursor)
     return JsonResponse(datos, safe=False)
@@ -57,9 +88,22 @@ def ver_productos(request):
 def ver_detalle_producto(request, sku):
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT * '
-            'FROM lubrishell.Producto p '
-            'WHERE p.sku = %s',
+            """
+        SELECT 
+        p.sku, 
+        p.nombre,
+        p.descripcion, 
+        p.url_imagen, 
+        m.nombre_marca AS marca, 
+        c.nombre AS categoria, 
+        p.stock
+        FROM lubrishell.Producto p
+        LEFT JOIN lubrishell.Marca m 
+            ON p.id_marca = m.id_marca
+        LEFT JOIN lubrishell.Categoria c 
+            ON p.id_categoria = c.id_categoria
+        WHERE p.sku = %s;
+            """,
             [sku]
         )
         datos = dictfetchall(cursor)
@@ -76,6 +120,8 @@ def registrar_cliente(request):
      correo_electronico = request.POST.get('correo_electronico')
      fecha_nacimiento = request.POST.get('fecha_nacimiento')
      contrasena = make_password(request.POST.get('contrasena')) #la hasheamos
+     nombre = request.POST.get('nombre')
+     apellido = request.POST.get('apellido')
     #validamos el correo
      try:
         validate_email(correo_electronico)
@@ -87,9 +133,9 @@ def registrar_cliente(request):
             with connection.cursor() as cursor:
                 cursor.execute(
                     'INSERT INTO lubrishell.Usuario '
-                    '(rut, numero_telefonico, correo_electronico, fecha_registro, contrasena, fecha_nacimiento) '
-                    'VALUES (%s, %s, %s, NOW(), %s, %s)',
-                    [rut, numero_telefonico, correo_electronico, contrasena, fecha_nacimiento]
+                    '(rut, numero_telefonico, correo_electronico, fecha_registro, contrasena, fecha_nacimiento, nombre, apellido) '
+                    'VALUES (%s, %s, %s, NOW(), %s, %s, %s , %s)',
+                    [rut, numero_telefonico, correo_electronico, contrasena, fecha_nacimiento, nombre, apellido]
                 )
                 cursor.execute(
                     'INSERT INTO lubrishell.Cliente (rut) VALUES (%s)',
@@ -111,7 +157,8 @@ def registrar_personal(request):
     password = request.POST.get('contrasena')
     fecha_nacimiento = request.POST.get('fecha_nacimiento')
     rol = request.POST.get('rol')
-
+    nombre = request.POST.get('nombre')
+    apellido = request.POST.get('apellido')
     if rol not in ('vendedor', 'jefe_bodega', 'administrador'):
         return JsonResponse({'error': 'Rol inválido'}, status=400)
 
@@ -122,9 +169,9 @@ def registrar_personal(request):
             with connection.cursor() as cursor:
                 cursor.execute(
                     'INSERT INTO lubrishell.Usuario '
-                    '(rut, numero_telefonico, correo_electronico, fecha_registro, contrasena, fecha_nacimiento) '
-                    'VALUES (%s, %s, %s, NOW(), %s, %s)',
-                    [rut, telefono, correo, contrasena_hasheada, fecha_nacimiento]
+                    '(rut, numero_telefonico, correo_electronico, fecha_registro, contrasena, fecha_nacimiento, nombre, apellido) '
+                    'VALUES (%s, %s, %s, NOW(), %s, %s, %s ,%s)',
+                    [rut, telefono, correo, contrasena_hasheada, fecha_nacimiento, nombre, apellido]
                 )
                 cursor.execute(
                     'INSERT INTO lubrishell.Personal (rut, rol) VALUES (%s, %s)',
@@ -138,7 +185,7 @@ def registrar_personal(request):
 
 @csrf_exempt
 @login_requerido
-@rol_requerido('jefe_bodega')
+@rol_requerido('jefe_bodega','administrador')
 def actualizar_precio(request, sku):
     if request.method not in ('POST', 'PUT'):
         return JsonResponse({'error': 'Método no permitido'}, status=405)
@@ -190,12 +237,37 @@ def actualizar_precio(request, sku):
 
 @csrf_exempt    
 @login_requerido
-@rol_requerido('jefe_bodega')  
+@rol_requerido('jefe_bodega','administrador')  
 def registrar_producto(request):
     sku = request.POST.get('sku')
     nombre = request.POST.get('nombre')
     descripcion = request.POST.get('descripcion')
     url_imagen = request.POST.get('url_imagen')
     marca = request.POST.get('marca')
-    stock = request.POST.get('sku')
+    stock = request.POST.get('stock')  
     id_categoria = request.POST.get('id_categoria')
+
+    try:
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    'INSERT INTO lubrishell.producto'
+                    '(sku, nombre, descripcion, url_imagen, marca, stock, id_categoria) '
+                    'VALUES (%s, %s, %s, %s, %s, %s, %s)',
+                    [sku, nombre, descripcion, url_imagen, marca, stock, id_categoria]
+                )
+
+        return JsonResponse({'mensaje': 'Producto creado correctamente'}, status=201)
+
+    except IntegrityError as e:
+        cause = e.__cause__  # objeto psycopg2.errors.UniqueViolation
+
+        # pgcode 23505 = unique_violation (aplica tanto a PK como a UNIQUE)
+        constraint = getattr(getattr(cause, 'diag', None), 'constraint_name', '') or ''
+
+        if 'sku' in constraint.lower() or constraint.lower() in ('producto_pkey',):
+            return JsonResponse({'error': 'Ya existe un producto con ese SKU'}, status=409)
+        elif 'nombre' in constraint.lower():
+            return JsonResponse({'error': 'Ya existe un producto con ese nombre'}, status=409)
+        else:
+            return JsonResponse({'error': 'Producto ya registrado'}, status=409) 
