@@ -96,13 +96,18 @@ def ver_detalle_producto(request, sku):
         p.url_imagen, 
         m.nombre_marca AS marca, 
         c.nombre AS categoria, 
-        p.stock
+        p.stock,
+        pv.precio_venta AS precio
         FROM lubrishell.Producto p
         LEFT JOIN lubrishell.Marca m 
             ON p.id_marca = m.id_marca
         LEFT JOIN lubrishell.Categoria c 
             ON p.id_categoria = c.id_categoria
-        WHERE p.sku = %s;
+        LEFT JOIN lubrishell.PrecioVenta pv
+            ON p.sku = pv.SKU_producto
+        WHERE p.sku = %s
+        ORDER BY pv.fecha_vigencia DESC NULLS LAST
+        LIMIT 1;
             """,
             [sku]
         )
@@ -217,21 +222,24 @@ def actualizar_precio(request, sku):
                 if not cursor.fetchone():
                     return JsonResponse({'error': 'Producto no encontrado'}, status=404)
 
-                # Realizar actualización
+                # Insertar un nuevo registro histórico de precio
                 cursor.execute(
-                    'UPDATE lubrishell.PrecioVenta '
-                    'SET precio_venta = %s, fecha_vigencia = NOW(), RUT_creador = %s '
-                    'WHERE SKU_producto = %s',
+                    '''
+                    INSERT INTO lubrishell.PrecioVenta (fecha_vigencia, precio_venta, RUT_creador, SKU_producto)
+                    VALUES (
+                        NOW(),
+                        %s,
+                        %s,
+                        %s
+                    )
+                    ''',
                     [nuevo_precio, request.rut, sku]
                 )
-                
-                if cursor.rowcount == 0:
-                    return JsonResponse({'error': 'No existe un registro de precio base previo para actualizar'}, status=404)
 
         return JsonResponse({'mensaje': 'Precio actualizado exitosamente'}, status=200)
 
     except IntegrityError as e:
-        return JsonResponse({'error': 'Error de integridad en la base de datos'}, status=400)
+        return JsonResponse({'error': f'Error de integridad en la base de datos: {str(e)}'}, status=400)
     except Exception as e:
         return JsonResponse({'error': f'Error en el servidor: {str(e)}'}, status=500)
 
