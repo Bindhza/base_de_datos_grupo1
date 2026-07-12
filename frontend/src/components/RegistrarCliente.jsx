@@ -31,9 +31,12 @@ function RegistrarCliente() {
   async function manejarSubmit(evento) {
     evento.preventDefault();
     setError(null);
-
+    if(rut.length < 11){
+      setError('Ingresa un rut correcto');
+      return;
+    }  
     if (!fechaNacimiento) {
-      setError('Seleccioná la fecha de nacimiento completa');
+      setError('Selecciona la fecha de nacimiento completa');
       return;
     }
 
@@ -45,7 +48,7 @@ function RegistrarCliente() {
     setCargando(true);
 
     try {
-      const res = await fetch(`${API_URL}/registrar_cliente/`, {
+      const res = await fetch(`${API_URL}/clientes/registrar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({

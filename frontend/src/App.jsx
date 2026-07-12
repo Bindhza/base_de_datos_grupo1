@@ -4,6 +4,7 @@ import ListaProductos from './components/ListaProductos';
 import DetalleProducto from './components/DetalleProducto';
 import Login from './components/Login';
 import RegistrarPersonal from './components/RegistrarPersonal';
+import RegistrarCliente from './components/RegistrarCliente';
 import RutaProtegida from './components/RutaProtegida';
 import { useAuth } from './useAuth';
 import './App.css';
@@ -16,16 +17,16 @@ function Inicio() {
     </div>
   );
 }
-
+ 
 function App() {
   const { estaLogueado, rol, logout } = useAuth();
-
+ 
   return (
     <div className="app-layout">
       {/* ================= BARRA LATERAL (MENU) ================= */}
       <nav className="app-sidebar">
         <h2 className="app-sidebar-titulo">Lubrishell Admin</h2>
-
+ 
         <ul className="app-sidebar-lista">
           <li>
             <NavLink
@@ -58,7 +59,7 @@ function App() {
               🛢️ Ver Productos
             </NavLink>
           </li>
-
+ 
           {/* Ejemplo de link visible solo para admin/jefe_bodega */}
           {(rol === 'administrador' || rol === 'jefe_bodega') && (
             <li>
@@ -72,7 +73,7 @@ function App() {
               </NavLink>
             </li>
           )}
-
+ 
           {/* Solo administrador puede crear cuentas de personal */}
           {rol === 'administrador' && (
             <li>
@@ -87,7 +88,7 @@ function App() {
             </li>
           )}
         </ul>
-
+ 
         <div className="app-sidebar-sesion">
           {estaLogueado ? (
             <button className="app-sidebar-link" onClick={logout}>
@@ -105,16 +106,17 @@ function App() {
           )}
         </div>
       </nav>
-
+ 
       {/* ================= ÁREA DE CONTENIDO PRINCIPAL ================= */}
       <main className="app-contenido">
         <Routes>
           <Route path="/" element={<Inicio />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/registro" element={<RegistrarCliente />} />
           <Route path="/categorias" element={<Categorias />} />
           <Route path="/productos" element={<ListaProductos />} />
           <Route path="/productos/:sku" element={<DetalleProducto />} />
-
+ 
           {/* Ejemplo de ruta protegida solo para ciertos roles */}
           <Route
             path="/productos/crear"
@@ -124,7 +126,7 @@ function App() {
               </RutaProtegida>
             }
           />
-
+ 
           {/* Solo administrador puede crear cuentas de personal */}
           <Route
             path="/personal/crear"
@@ -139,5 +141,5 @@ function App() {
     </div>
   );
 }
-
+ 
 export default App;

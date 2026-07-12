@@ -6,6 +6,8 @@ from django.views.decorators.csrf import csrf_exempt
 from .utils import dictfetchall
 from .auth_utils import generar_token
 from .decorators import login_requerido, rol_requerido
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 @csrf_exempt
 def login(request):
@@ -65,13 +67,20 @@ def ver_detalle_producto(request, sku):
         return JsonResponse({'error': 'Producto no encontrado'}, status=404)
     
     return JsonResponse(datos[0], safe=False) 
+
 @csrf_exempt
 def registrar_cliente(request):
      rut = request.POST.get('rut')
      numero_telefonico = request.POST.get('numero_telefonico')
      correo_electronico = request.POST.get('correo_electronico')
      fecha_nacimiento = request.POST.get('fecha_nacimiento')
-     contrasena = make_password(request.POST.get('password')) #la hasheamos
+     contrasena = make_password(request.POST.get('contrasena')) #la hasheamos
+    #validamos el correo
+     try:
+        validate_email(correo_electronico)
+     except ValidationError:
+        return JsonResponse({'error': 'Correo electrónico inválido'}, status=400)
+
      try:
         with transaction.atomic():
             with connection.cursor() as cursor:
@@ -90,6 +99,7 @@ def registrar_cliente(request):
 
      except IntegrityError:
         return JsonResponse({'error': 'El RUT o correo ya están registrados'}, status=409)
+     
 @csrf_exempt    
 @login_requerido
 @rol_requerido('administrador')     
@@ -124,3 +134,16 @@ def registrar_personal(request):
 
     except IntegrityError:
         return JsonResponse({'error': 'El RUT o correo ya están registrados'}, status=409)     
+
+
+@csrf_exempt    
+@login_requerido
+@rol_requerido('jefe_bodega')  
+def registrar_producto(request):
+    sku = request.POST.get('sku')
+    nombre = request.POST.get('nombre')
+    descripcion = request.POST.get('descripcion')
+    url_imagen = request.POST.get('url_imagen')
+    marca = request.POST.get('marca')
+    stock = request.POST.get('sku')
+    id_categoria = request.POST.get('id_categoria')
