@@ -5,7 +5,7 @@ export default function Categorias() {
   const [categorias, setCategorias] = useState([]);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/test-categoria/')
+    fetch('http://127.0.0.1:8000/api/productos/categorias')
       .then(res => res.json())
       .then(data => {
         // Pasamos cada objeto crudo del JSON por nuestro "molde"

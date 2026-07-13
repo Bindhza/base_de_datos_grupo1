@@ -39,7 +39,7 @@ function DetalleProductoInterno({ sku }) {
       })
       .then((data) => setProducto(data))
       .catch((err) => setError(err.message))
-      .finally(() => setCargando(false));
+      .finally(() => setCargando(false)); 
   }, [sku]);
 
   const manejarActualizarPrecio = async (e) => {
@@ -140,6 +140,10 @@ function DetalleProductoInterno({ sku }) {
           <span className="detalle-producto-marca">{producto.marca}</span>
           <h1 className="detalle-producto-nombre">{producto.nombre}</h1>
           <p className="detalle-producto-sku">SKU: {producto.sku}</p>
+
+          {producto.categoria && (
+            <p className="detalle-producto-categoria">{producto.categoria}</p>
+          )}
 
           <p className="detalle-producto-precio">
             Precio: {producto.precio ? `$${producto.precio}` : 'No definido'}

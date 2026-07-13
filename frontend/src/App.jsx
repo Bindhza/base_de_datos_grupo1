@@ -1,4 +1,6 @@
-import { Routes, Route, NavLink } from 'react-router-dom';
+import { Routes, Route, Link } from 'react-router-dom';
+import { LogOut, LogIn, Droplet } from 'lucide-react';
+import Dashboard from './components/Dashboard';
 import Categorias from './components/Categorias';
 import ListaProductos from './components/ListaProductos';
 import DetalleProducto from './components/DetalleProducto';
@@ -11,116 +13,72 @@ import RutaProtegida from './components/RutaProtegida';
 import { useAuth } from './useAuth';
 import './App.css';
 
-function Inicio() {
-  return (
-    <div className="pagina-inicio">
-      <h1>Bienvenido al Sistema</h1>
-      <p>Selecciona una opción en el menú lateral para interactuar con la base de datos.</p>
-    </div>
-  );
+const ETIQUETAS_ROL = {
+  administrador: 'Administrador',
+  jefe_bodega: 'Jefe de Bodega',
+  vendedor: 'Vendedor',
+};
+
+function obtenerIniciales(nombre, apellido) {
+  const inicialNombre = nombre ? nombre.trim().charAt(0).toUpperCase() : '';
+  const inicialApellido = apellido ? apellido.trim().charAt(0).toUpperCase() : '';
+  return `${inicialNombre}${inicialApellido}` || '?';
 }
 
 function App() {
-  const { estaLogueado, rol, logout } = useAuth();
+  const { estaLogueado, rol, nombre, apellido, logout } = useAuth();
 
   return (
     <div className="app-layout">
-      {/* ================= BARRA LATERAL (MENU) ================= */}
+      {/* ================= BARRA LATERAL ================= */}
       <nav className="app-sidebar">
-        <h2 className="app-sidebar-titulo">Lubrishell Admin</h2>
+        <Link to="/" className="app-marca">
+          <Droplet size={22} strokeWidth={2} />
+          <span>Lubrishell</span>
+        </Link>
 
-        <ul className="app-sidebar-lista">
-          <li>
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) =>
-                isActive ? 'app-sidebar-link app-sidebar-link-activo' : 'app-sidebar-link'
-              }
-            >
-              🏠 Inicio
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/categorias"
-              className={({ isActive }) =>
-                isActive ? 'app-sidebar-link app-sidebar-link-activo' : 'app-sidebar-link'
-              }
-            >
-              📁 Ver Categorías
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/productos"
-              end
-              className={({ isActive }) =>
-                isActive ? 'app-sidebar-link app-sidebar-link-activo' : 'app-sidebar-link'
-              }
-            >
-              🛢️ Ver Productos
-            </NavLink>
-          </li>
-
-          {/* Ejemplo de link visible solo para admin/jefe_bodega */}
-          {(rol === 'administrador' || rol === 'jefe_bodega') && (
-            <li>
-              <NavLink
-                to="/productos/crear"
-                className={({ isActive }) =>
-                  isActive ? 'app-sidebar-link app-sidebar-link-activo' : 'app-sidebar-link'
-                }
-              >
-                ➕ Registrar Producto
-              </NavLink>
-            </li>
-          )}
-
-          {/* Solo administrador puede crear cuentas de personal */}
-          {rol === 'administrador' && (
-            <li>
-              <NavLink
-                to="/personal/crear"
-                className={({ isActive }) =>
-                  isActive ? 'app-sidebar-link app-sidebar-link-activo' : 'app-sidebar-link'
-                }
-              >
-                👤 Crear Cuenta Personal
-              </NavLink>
-            </li>
-          )}
-        </ul>
-
-        <div className="app-sidebar-sesion">
+        <div className="app-sidebar-cuenta">
           {estaLogueado ? (
-            <button className="app-sidebar-link" onClick={logout}>
-              🚪 Cerrar sesión
-            </button>
+            <div className="cuenta-tarjeta">
+              <div className="cuenta-avatar">{obtenerIniciales(nombre, apellido)}</div>
+              <div className="cuenta-info">
+                <span className="cuenta-nombre">{nombre} {apellido}</span>
+                {rol !== 'cliente' && (
+                  <span className="cuenta-rol">{ETIQUETAS_ROL[rol] || rol}</span>
+                )}
+              </div>
+            </div>
           ) : (
-            <NavLink
-              to="/login"
-              className={({ isActive }) =>
-                isActive ? 'app-sidebar-link app-sidebar-link-activo' : 'app-sidebar-link'
-              }
-            >
-              🔑 Iniciar sesión
-            </NavLink>
+            <Link to="/login" className="cuenta-tarjeta cuenta-tarjeta-login">
+              <div className="cuenta-avatar cuenta-avatar-vacio">
+                <LogIn size={18} strokeWidth={2} />
+              </div>
+              <div className="cuenta-info">
+                <span className="cuenta-nombre">Iniciar sesión</span>
+                <span className="cuenta-rol">Accede a tu cuenta</span>
+              </div>
+            </Link>
           )}
         </div>
+
+        {estaLogueado && (
+          <button className="app-sidebar-logout" onClick={logout}>
+            <LogOut size={17} strokeWidth={2} />
+            Cerrar sesión
+          </button>
+        )}
       </nav>
 
-      {/* ================= ÁREA DE CONTENIDO PRINCIPAL ================= */}
+      {/* ================= CONTENIDO PRINCIPAL ================= */}
       <main className="app-contenido">
         <Routes>
-          <Route path="/" element={<Inicio />} />
+          <Route path="/" element={<Dashboard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<RegistrarCliente />} />
           <Route path="/categorias" element={<Categorias />} />
           <Route path="/productos" element={<ListaProductos />} />
           <Route path="/productos/:sku" element={<DetalleProducto />} />
 
-          {/* Registro de producto: administrador y jefe_bodega */}
           <Route
             path="/productos/crear"
             element={
@@ -139,7 +97,6 @@ function App() {
             }
           />
 
-          {/* Solo administrador puede crear cuentas de personal */}
           <Route
             path="/personal/crear"
             element={
