@@ -35,7 +35,8 @@
 }
 
 .registro-label input,
-.registro-label select {
+.registro-label select,
+.registro-label textarea {
   padding: 10px 12px;
   border: 1px solid #d5dae1;
   border-radius: 8px;
@@ -44,8 +45,31 @@
   background: #fff;
 }
 
+.registro-textarea-fija {
+  resize: none;
+  height: 114px;
+}
+
+.registro-nota {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: #8a94a3;
+}
+
+.registro-nota a {
+  color: #2b5f8a;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.registro-nota a:hover {
+  text-decoration: underline;
+}
+
 .registro-label input:focus,
-.registro-label select:focus {
+.registro-label select:focus,
+.registro-label textarea:focus {
   outline: none;
   border-color: #2b5f8a;
 }

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import SelectorFecha from '../utils/SelectorFecha';
 import { formatearRut } from '../utils/FormatoRut';
 import { fetchAutenticado } from '../api';
@@ -13,6 +12,8 @@ const ROLES = [
 
 function RegistrarPersonal() {
   const [rut, setRut] = useState('');
+  const [nombre, setNombre] = useState('');
+  const [apellido, setApellido] = useState('');  
   const [telefonoLocal, setTelefonoLocal] = useState('');
   const [correoElectronico, setCorreoElectronico] = useState('');
   const [contrasena, setContrasena] = useState('');
@@ -23,7 +24,6 @@ function RegistrarPersonal() {
   const [exito, setExito] = useState(false);
   const [cargando, setCargando] = useState(false);
 
-  const navigate = useNavigate();
 
   function manejarCambioRut(evento) {
     setRut(formatearRut(evento.target.value));
@@ -37,6 +37,19 @@ function RegistrarPersonal() {
   async function manejarSubmit(evento) {
     evento.preventDefault();
     setError(null);
+
+    if(rut.length < 11){
+      setError('Ingrese un rut correcto');
+      return;
+    }
+    if(!nombre){
+      setError('Ingrese su nombre');
+      return;
+    }
+    if(!apellido){
+      setError('Ingrese su apellido');
+      return;
+    } 
 
     if (!fechaNacimiento) {
       setError('Selecciona la fecha de nacimiento completa');
@@ -56,7 +69,7 @@ function RegistrarPersonal() {
     setCargando(true);
 
     try {
-      const res = await fetchAutenticado('/registrar_personal/', {
+      const res = await fetchAutenticado('/personal/registrar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
@@ -66,6 +79,8 @@ function RegistrarPersonal() {
           contrasena,
           fecha_nacimiento: fechaNacimiento,
           rol,
+          nombre,
+          apellido
         }),
       });
 
@@ -75,7 +90,6 @@ function RegistrarPersonal() {
       }
 
       setExito(true);
-      setTimeout(() => navigate('/login'), 1500);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -99,7 +113,27 @@ function RegistrarPersonal() {
             required
           />
         </label>
+        <label className="registro-label">
+        Nombre
+        <input
+          type="text"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          placeholder="Juan"
+          required
+        />
+      </label>
 
+      <label className="registro-label">
+        Apellido
+        <input
+          type="text"
+          value={apellido}
+          onChange={(e) => setApellido(e.target.value)}
+          placeholder="Pérez"
+          required
+        />
+      </label>
         <label className="registro-label">
           Número telefónico
           <div className="telefono-grupo">
@@ -153,7 +187,7 @@ function RegistrarPersonal() {
         </label>
 
         {error && <p className="registro-error">{error}</p>}
-        {exito && <p className="registro-exito">¡Personal registrado! Redirigiendo...</p>}
+        {exito && <p className="registro-exito">¡Personal registrado con éxito!</p>}
 
         <button type="submit" className="registro-boton" disabled={cargando}>
           {cargando ? 'Registrando...' : 'Registrar'}

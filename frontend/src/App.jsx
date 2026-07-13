@@ -1,32 +1,42 @@
-import { Routes, Route, NavLink } from 'react-router-dom';
+import { Routes, Route, Link, NavLink } from 'react-router-dom';
+import { LogOut, LogIn, Droplet } from 'lucide-react';
+import Dashboard from './components/Dashboard';
 import Categorias from './components/Categorias';
 import ListaProductos from './components/ListaProductos';
 import DetalleProducto from './components/DetalleProducto';
 import Login from './components/Login';
-import RegistrarPersonal from './components/RegistrarPersonal';
 import RegistrarCliente from './components/RegistrarCliente';
+import RegistrarPersonal from './components/RegistrarPersonal';
+import RegistrarProducto from './components/RegistrarProducto';
+import RegistrarMarca from './components/RegistrarMarca';
 import RutaProtegida from './components/RutaProtegida';
 import LanzarDescuento from './components/LanzarDescuento';
 import { useAuth } from './useAuth';
 import './App.css';
 
-function Inicio() {
-  return (
-    <div className="pagina-inicio">
-      <h1>Bienvenido al Sistema</h1>
-      <p>Selecciona una opción en el menú lateral para interactuar con la base de datos.</p>
-    </div>
-  );
+const ETIQUETAS_ROL = {
+  administrador: 'Administrador',
+  jefe_bodega: 'Jefe de Bodega',
+  vendedor: 'Vendedor',
+};
+
+function obtenerIniciales(nombre, apellido) {
+  const inicialNombre = nombre ? nombre.trim().charAt(0).toUpperCase() : '';
+  const inicialApellido = apellido ? apellido.trim().charAt(0).toUpperCase() : '';
+  return `${inicialNombre}${inicialApellido}` || '?';
 }
- 
+
 function App() {
-  const { estaLogueado, rol, logout } = useAuth();
- 
+  const { estaLogueado, rol, nombre, apellido, logout } = useAuth();
+
   return (
     <div className="app-layout">
-      {/* ================= BARRA LATERAL (MENU) ================= */}
+      {/* ================= BARRA LATERAL ================= */}
       <nav className="app-sidebar">
-        <h2 className="app-sidebar-titulo">Lubrishell Admin</h2>
+        <Link to="/" className="app-marca">
+          <Droplet size={22} strokeWidth={2} />
+          <span>Lubrishell</span>
+        </Link>
  
         <ul className="app-sidebar-lista">
           <li>
@@ -88,7 +98,7 @@ function App() {
               </NavLink>
             </li>
           )}
-
+ 
           {/* Solo administrador puede aplicar descuentos */}
           {(rol === 'administrador' || rol === 'jefe_bodega') && (
             <li>
@@ -104,43 +114,57 @@ function App() {
           )}
         </ul>
  
-        <div className="app-sidebar-sesion">
+        <div className="app-sidebar-cuenta">
           {estaLogueado ? (
-            <button className="app-sidebar-link" onClick={logout}>
-              🚪 Cerrar sesión
-            </button>
+            <div className="cuenta-tarjeta">
+              <div className="cuenta-avatar">{obtenerIniciales(nombre, apellido)}</div>
+              <div className="cuenta-info">
+                <span className="cuenta-nombre">{nombre} {apellido}</span>
+                {rol !== 'cliente' && (
+                  <span className="cuenta-rol">{ETIQUETAS_ROL[rol] || rol}</span>
+                )}
+              </div>
+            </div>
           ) : (
-            <NavLink
-              to="/login"
-              className={({ isActive }) =>
-                isActive ? 'app-sidebar-link app-sidebar-link-activo' : 'app-sidebar-link'
-              }
-            >
-              🔑 Iniciar sesión
-            </NavLink>
+            <Link to="/login" className="cuenta-tarjeta cuenta-tarjeta-login">
+              <div className="cuenta-avatar cuenta-avatar-vacio">
+                <LogIn size={18} strokeWidth={2} />
+              </div>
+              <div className="cuenta-info">
+                <span className="cuenta-nombre">Iniciar sesión</span>
+                <span className="cuenta-rol">Accede a tu cuenta</span>
+              </div>
+            </Link>
           )}
         </div>
+
+        {estaLogueado && (
+          <button className="app-sidebar-logout" onClick={logout}>
+            <LogOut size={17} strokeWidth={2} />
+            Cerrar sesión
+          </button>
+        )}
       </nav>
- 
-      {/* ================= ÁREA DE CONTENIDO PRINCIPAL ================= */}
+
+      {/* ================= CONTENIDO PRINCIPAL ================= */}
       <main className="app-contenido">
         <Routes>
-          <Route path="/" element={<Inicio />} />
+          <Route path="/" element={<Dashboard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<RegistrarCliente />} />
           <Route path="/categorias" element={<Categorias />} />
           <Route path="/productos" element={<ListaProductos />} />
           <Route path="/productos/:sku" element={<DetalleProducto />} />
- 
-          {/* Ejemplo de ruta protegida solo para ciertos roles */}
+
           <Route
             path="/productos/crear"
             element={
               <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
-                <div>Formulario de creación de producto (a implementar)</div>
+                <RegistrarProducto />
               </RutaProtegida>
             }
           />
+
           <Route
             path="/descuento"
             element={
@@ -149,8 +173,16 @@ function App() {
               </RutaProtegida>
             }
           />
- 
-          {/* Solo administrador puede crear cuentas de personal */}
+
+          <Route
+            path="/productos/marcas/registrar"
+            element={
+              <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
+                <RegistrarMarca />
+              </RutaProtegida>
+            }
+          />
+
           <Route
             path="/personal/crear"
             element={
@@ -164,5 +196,5 @@ function App() {
     </div>
   );
 }
- 
+
 export default App;

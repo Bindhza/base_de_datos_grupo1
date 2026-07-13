@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useAuth } from '../useAuth';
 import './DetalleProducto.css';
 
 const API_URL = 'http://localhost:8000/api/productos';
@@ -10,9 +11,24 @@ function DetalleProducto() {
 }
 
 function DetalleProductoInterno({ sku }) {
+  const { rol, token } = useAuth();
   const [producto, setProducto] = useState(null);
-  const [cargando, setCargando] = useState(true); // ya arranca en true
-  const [error, setError] = useState(null);        // ya arranca en null
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Estados para el formulario de precio
+  const [precioVentaInput, setPrecioVentaInput] = useState('');
+  const [actualizandoPrecio, setActualizandoPrecio] = useState(false);
+  const [mensajeExito, setMensajeExito] = useState(null);
+  const [errorPrecio, setErrorPrecio] = useState(null);
+
+  // Estados para el formulario de compra
+  const [cantidadCompra, setCantidadCompra] = useState('');
+  const [precioCompra, setPrecioCompra] = useState('');
+  const [fechaCompra, setFechaCompra] = useState('');
+  const [registrandoCompra, setRegistrandoCompra] = useState(false);
+  const [mensajeExitoCompra, setMensajeExitoCompra] = useState(null);
+  const [errorCompra, setErrorCompra] = useState(null);
 
   useEffect(() => {
     fetch(`${API_URL}/${sku}/`)
@@ -23,8 +39,78 @@ function DetalleProductoInterno({ sku }) {
       })
       .then((data) => setProducto(data))
       .catch((err) => setError(err.message))
-      .finally(() => setCargando(false)); // esto SÍ está bien: corre dentro de un callback async
+      .finally(() => setCargando(false)); 
   }, [sku]);
+
+  const manejarActualizarPrecio = async (e) => {
+    e.preventDefault();
+    setActualizandoPrecio(true);
+    setMensajeExito(null);
+    setErrorPrecio(null);
+
+    try {
+      const res = await fetch(`${API_URL}/${sku}/actualizar_precio/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ precio_venta: Number(precioVentaInput) })
+      });
+      
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'No se pudo actualizar el precio');
+      }
+
+      setMensajeExito(data.mensaje || 'Precio actualizado correctamente');
+      setProducto((prev) => ({ ...prev, precio: Number(precioVentaInput) }));
+      setPrecioVentaInput('');
+    } catch (err) {
+      setErrorPrecio(err.message);
+    } finally {
+      setActualizandoPrecio(false);
+    }
+  };
+
+  const manejarRegistrarCompra = async (e) => {
+    e.preventDefault();
+    setRegistrandoCompra(true);
+    setMensajeExitoCompra(null);
+    setErrorCompra(null);
+
+    try {
+      const res = await fetch(`${API_URL}/${sku}/compra/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          cantidad: Number(cantidadCompra),
+          precio_compra: Number(precioCompra),
+          fecha_compra: fechaCompra
+        })
+      });
+      
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'No se pudo registrar la compra');
+      }
+
+      setMensajeExitoCompra(data.mensaje || 'Compra registrada exitosamente');
+      setProducto((prev) => ({ ...prev, stock: prev.stock + Number(cantidadCompra) }));
+      setCantidadCompra('');
+      setPrecioCompra('');
+      setFechaCompra('');
+    } catch (err) {
+      setErrorCompra(err.message);
+    } finally {
+      setRegistrandoCompra(false);
+    }
+  };
 
   if (cargando) return <p className="estado-info">Cargando producto...</p>;
 
@@ -55,6 +141,14 @@ function DetalleProductoInterno({ sku }) {
           <h1 className="detalle-producto-nombre">{producto.nombre}</h1>
           <p className="detalle-producto-sku">SKU: {producto.sku}</p>
 
+          {producto.categoria && (
+            <p className="detalle-producto-categoria">{producto.categoria}</p>
+          )}
+
+          <p className="detalle-producto-precio">
+            Precio: {producto.precio ? `$${producto.precio}` : 'No definido'}
+          </p>
+
           {producto.descripcion && (
             <p className="detalle-producto-descripcion">{producto.descripcion}</p>
           )}
@@ -75,6 +169,70 @@ function DetalleProductoInterno({ sku }) {
           >
             {producto.stock > 0 ? 'Agregar al carrito' : 'No disponible'}
           </button>
+          
+          {(rol === 'jefe_bodega' || rol === 'administrador') && (
+            <div className="admin-panel">
+              <h3>Registrar Ingreso de Stock</h3>
+              <form onSubmit={manejarRegistrarCompra} className="admin-form">
+                <label>
+                  Cantidad:
+                  <input
+                    type="number"
+                    min="1"
+                    value={cantidadCompra}
+                    onChange={(e) => setCantidadCompra(e.target.value)}
+                    required
+                  />
+                </label>
+                <label>
+                  Precio de Compra (c/u):
+                  <input
+                    type="number"
+                    min="1"
+                    value={precioCompra}
+                    onChange={(e) => setPrecioCompra(e.target.value)}
+                    required
+                  />
+                </label>
+                <label>
+                  Fecha de Compra:
+                  <input
+                    type="date"
+                    value={fechaCompra}
+                    onChange={(e) => setFechaCompra(e.target.value)}
+                    required
+                  />
+                </label>
+                <button type="submit" disabled={registrandoCompra} className="admin-boton">
+                  {registrandoCompra ? 'Registrando...' : 'Registrar Compra'}
+                </button>
+              </form>
+              {errorCompra && <p className="admin-error">{errorCompra}</p>}
+              {mensajeExitoCompra && <p className="admin-exito">{mensajeExitoCompra}</p>}
+
+              <hr className="admin-separador" />
+
+              <h3>Actualizar Precio de Venta</h3>
+              <form onSubmit={manejarActualizarPrecio} className="admin-form">
+                <label>
+                  Nuevo Precio de Venta:
+                  <input
+                    type="number"
+                    min="1"
+                    value={precioVentaInput}
+                    onChange={(e) => setPrecioVentaInput(e.target.value)}
+                    required
+                    placeholder="Ej. 15000"
+                  />
+                </label>
+                <button type="submit" disabled={actualizandoPrecio} className="admin-boton">
+                  {actualizandoPrecio ? 'Actualizando...' : 'Actualizar Precio'}
+                </button>
+              </form>
+              {errorPrecio && <p className="admin-error">{errorPrecio}</p>}
+              {mensajeExito && <p className="admin-exito">{mensajeExito}</p>}
+            </div>
+          )}
         </div>
       </div>
     </div>
