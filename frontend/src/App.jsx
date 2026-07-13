@@ -8,7 +8,10 @@ import Login from './components/Login';
 import RegistrarCliente from './components/RegistrarCliente';
 import RegistrarPersonal from './components/RegistrarPersonal';
 import RegistrarProducto from './components/RegistrarProducto';
+import InventarioInmovilizado from './components/InventarioInmovilizado';
 import RegistrarMarca from './components/RegistrarMarca';
+import PrepararEntregas from './components/PrepararEntregas';
+import EntregasRetiro from './components/EntregasRetiro';
 import RutaProtegida from './components/RutaProtegida';
 import LanzarDescuento from './components/LanzarDescuento';
 import { useAuth } from './useAuth';
@@ -188,6 +191,33 @@ function App() {
             element={
               <RutaProtegida rolesPermitidos={['administrador']}>
                 <RegistrarPersonal />
+              </RutaProtegida>
+            }
+          />
+
+          <Route
+            path="/productos/inmovilizado/"
+            element={
+              <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
+                <InventarioInmovilizado />
+              </RutaProtegida>
+              }
+          />
+          <Route
+            path="/entregas/preparar"
+            element={
+              <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
+                <PrepararEntregas />
+              </RutaProtegida>
+            }
+          />
+
+          {/* entregar en sucursal */}
+          <Route
+            path="/entregas/retiro"
+            element={
+              <RutaProtegida rolesPermitidos={['administrador', 'vendedor']}>
+                <EntregasRetiro />
               </RutaProtegida>
             }
           />
