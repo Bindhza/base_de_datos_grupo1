@@ -24,6 +24,7 @@ urlpatterns = [
     path('api/productos/categorias', views.obtener_categorias, name='categorias'),
     path('api/productos/marcas', views.obtener_marcas, name='marcas'),
     path('api/productos/marcas/registrar', views.registrar_marca, name='marcas'),
+    path('api/productos/inmovilizado/', views.obtener_productos_inmovilizados, name='productos_inmovilizados'),
     path('api/productos/', views.ver_productos, name = 'productos'),
     path('api/productos/registrar', views.registrar_producto, name = 'registrar_productos'),
     path('api/productos/<int:sku>/', views.ver_detalle_producto, name='ver_detalle_producto'),

@@ -8,6 +8,7 @@ import Login from './components/Login';
 import RegistrarCliente from './components/RegistrarCliente';
 import RegistrarPersonal from './components/RegistrarPersonal';
 import RegistrarProducto from './components/RegistrarProducto';
+import InventarioInmovilizado from './components/InventarioInmovilizado';
 import RegistrarMarca from './components/RegistrarMarca';
 import RutaProtegida from './components/RutaProtegida';
 import { useAuth } from './useAuth';
@@ -105,6 +106,16 @@ function App() {
               </RutaProtegida>
             }
           />
+
+          <Route
+            path="/productos/inmovilizado/"
+            element={
+              <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
+                <InventarioInmovilizado />
+              </RutaProtegida>
+            }
+          />
+
         </Routes>
       </main>
     </div>

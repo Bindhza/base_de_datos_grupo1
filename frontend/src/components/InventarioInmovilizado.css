@@ -1,0 +1,150 @@
+.contenedor-inmovilizado {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.encabezado-reporte {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.encabezado-reporte h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1c2b3a;
+}
+
+/* Tarjeta de Resumen Financiero */
+.card-resumen {
+  background: #ffffff;
+  border: 1px solid #e2e5ea;
+  border-radius: 10px;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  box-shadow: 0 2px 8px rgba(15, 40, 70, 0.04);
+}
+
+.resumen-titulo {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #8a94a3;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.resumen-valor {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #2b5f8a;
+}
+
+/* Tabla Estilos Base */
+.tabla-contenedor {
+  background: #ffffff;
+  border: 1px solid #e2e5ea;
+  border-radius: 12px;
+  overflow-x: auto; /* Permite scroll horizontal si la pantalla es pequeña */
+  box-shadow: 0 4px 12px rgba(15, 40, 70, 0.02);
+}
+
+.tabla-inmovilizado {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.95rem;
+  color: #3d4a58;
+}
+
+.tabla-inmovilizado th {
+  background: #f8fafc;
+  padding: 16px;
+  font-weight: 600;
+  color: #1c2b3a;
+  border-bottom: 1px solid #e2e5ea;
+}
+
+.tabla-inmovilizado td {
+  padding: 16px;
+  border-bottom: 1px solid #eef1f4;
+  vertical-align: middle;
+}
+
+.tabla-inmovilizado tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tabla-inmovilizado tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Alineaciones y Modificadores */
+.celda-derecha {
+  text-align: right;
+}
+
+.col-sku {
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #1c2b3a;
+  font-weight: bold;
+}
+
+.col-nombre {
+  font-weight: 500;
+  color: #1c2b3a;
+}
+
+.col-stock.sin-stock {
+  color: #d94e3f;
+  font-weight: 600;
+}
+
+.col-inmovilizado {
+  font-weight: 600;
+  color: #2b5f8a;
+}
+
+.badge-categoria {
+  display: inline-block;
+  padding: 4px 10px;
+  background: #eef1f4;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #3d4a58;
+}
+
+/* Estados de carga y error heredados de tu estilo */
+.estado-info,
+.estado-error {
+  padding: 60px 24px;
+  text-align: center;
+  font-size: 0.95rem;
+  color: #5a6472;
+}
+
+.estado-error {
+  color: #d94e3f;
+}
+
+/* Ajuste móvil */
+@media (max-width: 640px) {
+  .encabezado-reporte {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .card-resumen {
+    width: 100%;
+    align-items: flex-start;
+    box-sizing: border-box;
+  }
+}

@@ -390,3 +390,43 @@ def registrar_compra(request, sku):
         return JsonResponse({'error': f'Error de integridad en la base de datos: {str(e)}'}, status=400)
     except Exception as e:
         return JsonResponse({'error': f'Error en el servidor: {str(e)}'}, status=500)
+    
+@csrf_exempt
+@login_requerido
+@rol_requerido('jefe_bodega','administrador')    
+def obtener_productos_inmovilizados(request):
+    """Consulta que muestra los productos que no se venden y cuanto dinero está estancado.
+     Nos sugiere qué productos poner en oferta."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            '''
+        SELECT 
+            cat.nombre AS categoria,
+            p.SKU, 
+            p.nombre, 
+            p.stock,
+            pv.precio_venta AS precio,
+            (p.stock * pv.precio_venta) AS dinero_inmovilizado
+        FROM lubrishell.Producto p
+        JOIN lubrishell.Categoria cat 
+            ON cat.id_categoria = p.id_categoria
+        LEFT JOIN (
+            SELECT 
+                SKU_producto, 
+                precio_venta,
+                ROW_NUMBER() OVER (PARTITION BY SKU_producto ORDER BY fecha_vigencia DESC NULLS LAST) as rn
+            FROM lubrishell.PrecioVenta
+        ) pv 
+            ON p.SKU = pv.SKU_producto AND pv.rn = 1
+        WHERE NOT EXISTS (
+            SELECT 1 
+            FROM lubrishell.Producto_OrdenDeCompra poc 
+            WHERE poc.SKU = p.SKU
+        )
+        AND p.stock > 0
+        ORDER BY dinero_inmovilizado DESC;
+           '''
+                )
+    
+        datos = dictfetchall(cursor)
+    return JsonResponse(datos, safe=False)

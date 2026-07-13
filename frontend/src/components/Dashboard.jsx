@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import {
   Package,
   LayoutGrid,
+  CircleDollarSign,
   PackagePlus,
   Award,
   UserPlus,
@@ -37,7 +38,13 @@ function Dashboard() {
         icono: Award,
         titulo: 'Registrar marca',
         descripcion: 'Agrega una marca nueva para tus productos',
-      }
+      },
+      {
+        to: '/productos/inmovilizado',
+        icono: CircleDollarSign,
+        titulo: 'Productos inmbolizados',
+        descripcion: 'Ve los productos que no se están vendiendo y cuánto dinero está estancado',
+      },
     );
   }
 
