@@ -31,4 +31,8 @@ urlpatterns = [
     path('api/productos/<int:sku>/compra/', views.registrar_compra, name='registrar_compra'),
     path('api/clientes/registrar', views.registrar_cliente, name = 'registrar_cliente'),
     path('api/personal/registrar', views.registrar_personal, name = 'registrar_personal'),
+    path('api/entregas/preparacion/', views.entregas_en_preparacion, name='entregas_en_preparacion'),
+    path('api/entregas/retiro/', views.entregas_disponibles_retiro, name='entregas_disponibles_retiro'),
+    path('api/entregas/<int:id_entrega>/preparar/', views.preparar_entrega, name='preparar_entrega'),
+    path('api/entregas/<int:id_entrega>/entregar/', views.entregar_en_sucursal, name='entregar_en_sucursal'),
 ]

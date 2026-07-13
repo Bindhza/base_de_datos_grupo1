@@ -5,6 +5,8 @@ import {
   PackagePlus,
   Award,
   UserPlus,
+  PackageCheck,
+  Store,
 } from 'lucide-react';
 import { useAuth } from '../useAuth';
 import './Dashboard.css';
@@ -14,6 +16,7 @@ function Dashboard() {
 
   const puedeGestionarProductos = rol === 'administrador' || rol === 'jefe_bodega';
   const esAdministrador = rol === 'administrador';
+  const puedeEntregar = rol === 'administrador' || rol === 'vendedor';
 
   const tarjetas = [
     {
@@ -37,8 +40,23 @@ function Dashboard() {
         icono: Award,
         titulo: 'Registrar marca',
         descripcion: 'Agrega una marca nueva para tus productos',
+      },
+      {
+        to: '/entregas/preparar',
+        icono: PackageCheck,
+        titulo: 'Preparar entregas',
+        descripcion: 'Arma los paquetes pendientes para retiro en sucursal',
       }
     );
+  }
+
+  if (puedeEntregar) {
+    tarjetas.push({
+      to: '/entregas/retiro',
+      icono: Store,
+      titulo: 'Entregas en sucursal',
+      descripcion: 'Registra los pedidos retirados por los clientes',
+    });
   }
 
   if (esAdministrador) {
