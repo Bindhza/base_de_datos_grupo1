@@ -6,6 +6,7 @@ import Login from './components/Login';
 import RegistrarPersonal from './components/RegistrarPersonal';
 import RegistrarCliente from './components/RegistrarCliente';
 import RutaProtegida from './components/RutaProtegida';
+import LanzarDescuento from './components/LanzarDescuento';
 import { useAuth } from './useAuth';
 import './App.css';
 
@@ -87,6 +88,20 @@ function App() {
               </NavLink>
             </li>
           )}
+
+          {/* Solo administrador puede aplicar descuentos */}
+          {(rol === 'administrador' || rol === 'jefe_bodega') && (
+            <li>
+              <NavLink
+                to="/descuento"
+                className={({ isActive }) =>
+                  isActive ? 'app-sidebar-link app-sidebar-link-activo' : 'app-sidebar-link'
+                }
+              >
+                💰 Aplicar Descuento
+              </NavLink>
+            </li>
+          )}
         </ul>
  
         <div className="app-sidebar-sesion">
@@ -123,6 +138,14 @@ function App() {
             element={
               <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
                 <div>Formulario de creación de producto (a implementar)</div>
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/descuento"
+            element={
+              <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
+                <LanzarDescuento />
               </RutaProtegida>
             }
           />

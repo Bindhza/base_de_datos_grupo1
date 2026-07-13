@@ -28,4 +28,6 @@ urlpatterns = [
     path('api/productos/<int:sku>/actualizar_precio/', views.actualizar_precio, name='actualizar_precio'),
     path('api/registrar_cliente/', views.registrar_cliente, name = 'registrar_cliente'),
     path('api/registrar_personal/', views.registrar_personal, name = 'registrar_personal'),
+    path('api/productos/lanzar_descuento/', views.lanzar_oferta, name='lanzar_oferta'),
+    path('api/productos/obtener_producto/<int:sku>/', views.obtener_producto, name='obtener_producto'),
 ]

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SelectorFecha from '../utils/SelectorFecha';
-import { formatearRut } from '../utils/formatoRut';
+import { formatearRut } from '../utils/FormatoRut';
 import './RegistroForm.css';
 
 const API_URL = 'http://localhost:8000/api';

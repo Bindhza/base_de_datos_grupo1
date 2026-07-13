@@ -1,0 +1,185 @@
+.discount-contenedor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.discount-form {
+  width: 100%;
+  max-width: 440px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+.discount-form h1 {
+  margin: 0 0 4px;
+  font-size: 1.5rem;
+  color: #1e293b;
+  text-align: center;
+  font-weight: 700;
+}
+
+.discount-porcent-label,
+.sku-label,
+.fecha-inicio-label,
+.fecha-fin-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.discount-porcent-label input,
+.sku-label input,
+.fecha-inicio-label input,
+.fecha-fin-label input {
+  padding: 12px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: #ffffff;
+  color: #1e293b; /* Evita letras blancas */
+  outline: none;
+  transition: all 0.2s ease-in-out;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* Forzar estilos del input de tipo fecha */
+.fecha-inicio-label input[type="date"],
+.fecha-fin-label input[type="date"] {
+  color: #1e293b;
+  background-color: #ffffff;
+}
+
+.discount-input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.discount-input-group input {
+  flex: 1;
+  min-width: 0;
+}
+
+.discount-addon {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.discount-porcent-label input:focus,
+.sku-label input:focus,
+.fecha-inicio-label input:focus,
+.fecha-fin-label input:focus {
+  border-color: #2b5f8a;
+  box-shadow: 0 0 0 3px rgba(43, 95, 138, 0.15);
+  background-color: #ffffff;
+}
+
+.discount-porcent-label input:disabled,
+.sku-label input:disabled,
+.fecha-inicio-label input:disabled,
+.fecha-fin-label input:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
+}
+
+/* Tarjeta informativa de previsualización (el label sin clase) */
+.discount-form label:not([class]) {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.discount-form label:not([class]) p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #475569;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.discount-form label:not([class]) p:last-child {
+  border-top: 1px dashed #cbd5e1;
+  padding-top: 10px;
+  margin-top: 4px;
+  font-weight: 800;
+  color: #16a34a; /* Muestra el precio final en verde */
+  font-size: 1.05rem;
+}
+
+.discount-error {
+  margin: 0;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.85rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+.discount-exito {
+  margin: 0;
+  color: #15803d;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.85rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+.discount-boton {
+  margin-top: 8px;
+  background: #2b5f8a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.discount-boton:hover:not(:disabled) {
+  background: #1f4a6e;
+}
+
+.discount-boton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.discount-boton:disabled {
+  background: #cbd5e1;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
