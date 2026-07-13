@@ -9,6 +9,7 @@ from .auth_utils import generar_token
 from .decorators import login_requerido, rol_requerido
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from datetime import datetime, date
 
 @csrf_exempt
 def login(request):
@@ -279,3 +280,74 @@ def registrar_producto(request):
             return JsonResponse({'error': 'Ya existe un producto con ese nombre'}, status=409)
         else:
             return JsonResponse({'error': 'Producto ya registrado'}, status=409) 
+
+@csrf_exempt
+@login_requerido
+@rol_requerido('jefe_bodega','administrador')
+def registrar_compra(request, sku):
+    if request.method not in ('POST', 'PUT'):
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    try:
+        body = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Cuerpo de petición inválido'}, status=400)
+
+    precio_compra = body.get('precio_compra')
+    cantidad = body.get('cantidad')
+    fecha_compra_str = body.get('fecha_compra')
+
+    if precio_compra is None or cantidad is None or not fecha_compra_str:
+        return JsonResponse({'error': 'Faltan datos requeridos'}, status=400)
+
+    try:
+        precio_compra = int(precio_compra)
+        cantidad = int(cantidad)
+        if precio_compra <= 0 or cantidad <= 0:
+            return JsonResponse({'error': 'Precio y cantidad deben ser mayores a 0'}, status=400)
+    except ValueError:
+        return JsonResponse({'error': 'Precio y cantidad deben ser números válidos'}, status=400)
+
+    try:
+        # Validar fecha_compra <= hoy
+        fecha_compra = datetime.strptime(fecha_compra_str, '%Y-%m-%d').date()
+        if fecha_compra > date.today():
+            return JsonResponse({'error': 'La fecha de compra no puede ser en el futuro'}, status=400)
+    except ValueError:
+        return JsonResponse({'error': 'Formato de fecha inválido. Use YYYY-MM-DD'}, status=400)
+
+    try:
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                # Validar existencia del producto
+                cursor.execute('SELECT 1 FROM lubrishell.Producto WHERE SKU = %s', [sku])
+                if not cursor.fetchone():
+                    return JsonResponse({'error': 'Producto no encontrado'}, status=404)
+
+                # Insertar en Compra (id_compra is GENERATED ALWAYS)
+                cursor.execute(
+                    '''
+                    INSERT INTO lubrishell.Compra (fecha_compra, precio_compra, cantidad_compra, RUT_creador_compra, SKU_producto_comprado)
+                    VALUES (
+                        %s, %s, %s, %s, %s
+                    )
+                    ''',
+                    [fecha_compra_str, precio_compra, cantidad, request.rut, sku]
+                )
+
+                # Actualizar stock
+                cursor.execute(
+                    '''
+                    UPDATE lubrishell.Producto 
+                    SET stock = stock + %s 
+                    WHERE SKU = %s
+                    ''',
+                    [cantidad, sku]
+                )
+
+        return JsonResponse({'mensaje': 'Compra registrada y stock actualizado exitosamente'}, status=200)
+
+    except IntegrityError as e:
+        return JsonResponse({'error': f'Error de integridad en la base de datos: {str(e)}'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': f'Error en el servidor: {str(e)}'}, status=500)
