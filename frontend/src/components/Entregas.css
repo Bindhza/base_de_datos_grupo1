@@ -1,0 +1,124 @@
+
+
+.entregas-contenedor {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.entregas-encabezado {
+  margin-bottom: 28px;
+}
+
+.entregas-encabezado h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--fuente-marca);
+  font-size: 1.7rem;
+  font-weight: 600;
+  color: var(--color-texto);
+  margin: 0 0 6px;
+}
+
+.entregas-encabezado p {
+  margin: 0;
+  color: #5a6472;
+}
+
+.entregas-estado {
+  text-align: center;
+  color: #5a6472;
+  padding: 32px 0;
+}
+
+.entregas-estado-error {
+  color: #b3261e;
+}
+
+.entregas-mensaje-exito,
+.entregas-mensaje-error {
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin: 0 0 18px;
+  font-size: 0.95rem;
+}
+
+.entregas-mensaje-exito {
+  background: #e8f5ec;
+  color: #1d6b35;
+  border: 1px solid #bfe3ca;
+}
+
+.entregas-mensaje-error {
+  background: #fdeceb;
+  color: #b3261e;
+  border: 1px solid #f5c6c2;
+}
+
+.entregas-tabla-envoltorio {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid #e2e5ea;
+  border-radius: 14px;
+}
+
+.entregas-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.entregas-tabla th {
+  text-align: left;
+  padding: 14px 16px;
+  color: #5a6472;
+  font-weight: 600;
+  border-bottom: 1px solid #e2e5ea;
+  white-space: nowrap;
+}
+
+.entregas-tabla td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eef0f3;
+  vertical-align: middle;
+}
+
+.entregas-tabla tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.entregas-sku {
+  display: block;
+  color: #8a93a1;
+  font-size: 0.8rem;
+}
+
+.entregas-input {
+  width: 80px;
+  padding: 8px 10px;
+  border: 1px solid #d4d9e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.entregas-boton {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-acento-ambar, #d9a326);
+  color: #1e232b;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.15s ease;
+}
+
+.entregas-boton:hover {
+  filter: brightness(1.06);
+}
+
+.entregas-boton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

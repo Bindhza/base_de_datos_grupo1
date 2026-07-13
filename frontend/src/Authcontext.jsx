@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AuthContext } from './authContextObject';
+import { AuthContext } from './Authcontextobject';
 
 const API_URL = 'http://localhost:8000/api';
 

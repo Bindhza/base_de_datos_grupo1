@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import SelectorFecha from '../utils/SelectorFecha';
-import { formatearRut } from '../utils/formatoRut';
+import { formatearRut } from '../utils/FormatoRut';
 import { fetchAutenticado } from '../api';
 import './RegistroForm.css';
 

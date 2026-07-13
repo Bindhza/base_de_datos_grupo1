@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link} from 'react-router-dom';
 import { useAuth } from '../useAuth';
-import { formatearRut } from '../utils/formatoRut';
+import { formatearRut } from '../utils/FormatoRut';
 import './Login.css';
 function Login() {
   const [rut, setRut] = useState('');

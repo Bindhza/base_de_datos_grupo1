@@ -1,4 +1,4 @@
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, NavLink } from 'react-router-dom';
 import { LogOut, LogIn, Droplet } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import Categorias from './components/Categorias';
@@ -10,7 +10,10 @@ import RegistrarPersonal from './components/RegistrarPersonal';
 import RegistrarProducto from './components/RegistrarProducto';
 import InventarioInmovilizado from './components/InventarioInmovilizado';
 import RegistrarMarca from './components/RegistrarMarca';
+import PrepararEntregas from './components/PrepararEntregas';
+import EntregasRetiro from './components/EntregasRetiro';
 import RutaProtegida from './components/RutaProtegida';
+import LanzarDescuento from './components/LanzarDescuento';
 import { useAuth } from './useAuth';
 import './App.css';
 
@@ -37,7 +40,83 @@ function App() {
           <Droplet size={22} strokeWidth={2} />
           <span>Lubrishell</span>
         </Link>
-
+ 
+        <ul className="app-sidebar-lista">
+          <li>
+            <NavLink
+              to="/"
+              end
+              className={({ isActive }) =>
+                isActive ? 'app-sidebar-link app-sidebar-link-activo' : 'app-sidebar-link'
+              }
+            >
+              🏠 Inicio
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/categorias"
+              className={({ isActive }) =>
+                isActive ? 'app-sidebar-link app-sidebar-link-activo' : 'app-sidebar-link'
+              }
+            >
+              📁 Ver Categorías
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/productos"
+              className={({ isActive }) =>
+                isActive ? 'app-sidebar-link app-sidebar-link-activo' : 'app-sidebar-link'
+              }
+            >
+              🛢️ Ver Productos
+            </NavLink>
+          </li>
+ 
+          {/* Ejemplo de link visible solo para admin/jefe_bodega */}
+          {(rol === 'administrador' || rol === 'jefe_bodega') && (
+            <li>
+              <NavLink
+                to="/productos/crear"
+                className={({ isActive }) =>
+                  isActive ? 'app-sidebar-link app-sidebar-link-activo' : 'app-sidebar-link'
+                }
+              >
+                ➕ Crear Producto
+              </NavLink>
+            </li>
+          )}
+ 
+          {/* Solo administrador puede crear cuentas de personal */}
+          {rol === 'administrador' && (
+            <li>
+              <NavLink
+                to="/personal/crear"
+                className={({ isActive }) =>
+                  isActive ? 'app-sidebar-link app-sidebar-link-activo' : 'app-sidebar-link'
+                }
+              >
+                👤 Crear Cuenta Personal
+              </NavLink>
+            </li>
+          )}
+ 
+          {/* Solo administrador puede aplicar descuentos */}
+          {(rol === 'administrador' || rol === 'jefe_bodega') && (
+            <li>
+              <NavLink
+                to="/descuento"
+                className={({ isActive }) =>
+                  isActive ? 'app-sidebar-link app-sidebar-link-activo' : 'app-sidebar-link'
+                }
+              >
+                💰 Aplicar Descuento
+              </NavLink>
+            </li>
+          )}
+        </ul>
+ 
         <div className="app-sidebar-cuenta">
           {estaLogueado ? (
             <div className="cuenta-tarjeta">
@@ -90,6 +169,15 @@ function App() {
           />
 
           <Route
+            path="/descuento"
+            element={
+              <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
+                <LanzarDescuento />
+              </RutaProtegida>
+            }
+          />
+
+          <Route
             path="/productos/marcas/registrar"
             element={
               <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
@@ -113,9 +201,26 @@ function App() {
               <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
                 <InventarioInmovilizado />
               </RutaProtegida>
+              }
+          />
+          <Route
+            path="/entregas/preparar"
+            element={
+              <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
+                <PrepararEntregas />
+              </RutaProtegida>
             }
           />
 
+          {/* entregar en sucursal */}
+          <Route
+            path="/entregas/retiro"
+            element={
+              <RutaProtegida rolesPermitidos={['administrador', 'vendedor']}>
+                <EntregasRetiro />
+              </RutaProtegida>
+            }
+          />
         </Routes>
       </main>
     </div>
