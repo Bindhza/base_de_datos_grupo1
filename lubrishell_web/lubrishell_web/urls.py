@@ -35,4 +35,6 @@ urlpatterns = [
     path('api/entregas/retiro/', views.entregas_disponibles_retiro, name='entregas_disponibles_retiro'),
     path('api/entregas/<int:id_entrega>/preparar/', views.preparar_entrega, name='preparar_entrega'),
     path('api/entregas/<int:id_entrega>/entregar/', views.entregar_en_sucursal, name='entregar_en_sucursal'),
+    path('api/productos/lanzar_descuento/', views.lanzar_oferta, name='lanzar_oferta'),
+    path('api/productos/obtener_producto/<int:sku>/', views.obtener_producto, name='obtener_producto'),
 ]

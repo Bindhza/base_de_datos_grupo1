@@ -260,6 +260,89 @@ def actualizar_precio(request, sku):
     except Exception as e:
         return JsonResponse({'error': f'Error en el servidor: {str(e)}'}, status=500)
 
+@csrf_exempt
+@login_requerido
+@rol_requerido('jefe_bodega', 'administrador')
+def lanzar_oferta(request):
+    if request.method not in ('POST', 'PUT'):
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    sku = request.POST.get('sku')
+    descuento = request.POST.get('descuento')
+
+    fecha_inicio = request.POST.get('fecha_inicio')
+    fecha_fin = request.POST.get('fecha_fin')
+
+    if not sku:
+        return JsonResponse({'error': 'El SKU del producto es requerido'}, status=400)
+    if not descuento:
+        return JsonResponse({'error': 'El porcentaje de descuento es requerido'}, status=400)
+
+    try:
+        descuento = int(descuento)
+        if descuento <= 0 or descuento > 100:
+            return JsonResponse({'error': 'El descuento debe ser un porcentaje entre 1 y 100'}, status=400)
+    except ValueError:
+        return JsonResponse({'error': 'El descuento debe ser un número entero válido'}, status=400)
+
+    if not fecha_inicio:
+        fecha_inicio = None  
+    if not fecha_fin:
+        fecha_fin = None
+
+    try:
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute('SELECT 1 FROM lubrishell.Producto WHERE SKU = %s', [sku])
+                if not cursor.fetchone():
+                    return JsonResponse({'error': f'El producto con SKU {sku} no existe'}, status=404)
+
+                cursor.execute(
+                    'INSERT INTO lubrishell.Oferta ' 
+                    '(fecha_creacion, fecha_inicio, descuento, fecha_fin, sku_producto, rut_creador) '
+                    'VALUES (LEAST(NOW(), COALESCE(%s, NOW())), COALESCE(%s, NOW()), %s, %s, %s, %s)',
+                    [fecha_inicio, fecha_inicio, descuento, fecha_fin, sku, request.rut]
+                )
+
+        return JsonResponse({'mensaje': 'Oferta agregada exitosamente'}, status=201)
+
+    except IntegrityError as e:
+        return JsonResponse({'error': f'Error de integridad en la base de datos: {str(e)}'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': f'Error interno del servidor: {str(e)}'}, status=500)
+
+@csrf_exempt
+@login_requerido
+def obtener_producto(request, sku):
+    if request.method not in ('GET',):
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT p.nombre, p.descripcion, pv.precio_venta 
+                FROM lubrishell.Producto p 
+                LEFT JOIN lubrishell.PrecioVenta pv ON p.sku = pv.sku_producto 
+                WHERE p.sku = %s 
+                ORDER BY pv.fecha_vigencia DESC 
+                LIMIT 1
+                ''',
+                [sku]
+            )
+
+            datos = dictfetchall(cursor)
+
+            if not datos:
+                return JsonResponse({'error': 'Producto no encontrado'}, status=404)
+
+            return JsonResponse(datos[0], status=200)
+
+    except Exception as e:
+        return JsonResponse({'error': f'Error interno del servidor: {str(e)}'}, status=500)
+
+
+
 @csrf_exempt    
 @login_requerido
 @rol_requerido('jefe_bodega','administrador')  
