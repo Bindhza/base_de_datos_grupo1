@@ -170,8 +170,13 @@ function DetalleProductoInterno({ sku }) {
             {producto.stock > 0 ? 'Agregar al carrito' : 'No disponible'}
           </button>
           
-          {(rol === 'jefe_bodega' || rol === 'administrador') && (
-            <div className="admin-panel">
+        </div>
+      </div>
+
+      {(rol === 'jefe_bodega' || rol === 'administrador') && (
+        <div className="admin-panel">
+          <div className="admin-panel-grid">
+            <div className="admin-seccion">
               <h3>Registrar Ingreso de Stock</h3>
               <form onSubmit={manejarRegistrarCompra} className="admin-form">
                 <label>
@@ -209,9 +214,9 @@ function DetalleProductoInterno({ sku }) {
               </form>
               {errorCompra && <p className="admin-error">{errorCompra}</p>}
               {mensajeExitoCompra && <p className="admin-exito">{mensajeExitoCompra}</p>}
+            </div>
 
-              <hr className="admin-separador" />
-
+            <div className="admin-seccion">
               <h3>Actualizar Precio de Venta</h3>
               <form onSubmit={manejarActualizarPrecio} className="admin-form">
                 <label>
@@ -232,9 +237,9 @@ function DetalleProductoInterno({ sku }) {
               {errorPrecio && <p className="admin-error">{errorPrecio}</p>}
               {mensajeExito && <p className="admin-exito">{mensajeExito}</p>}
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
