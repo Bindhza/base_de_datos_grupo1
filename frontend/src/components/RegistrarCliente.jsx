@@ -8,6 +8,8 @@ const API_URL = 'http://localhost:8000/api';
 
 function RegistrarCliente() {
   const [rut, setRut] = useState('');
+  const [nombre, setNombre] = useState('');
+  const [apellido, setApellido] = useState('');  
   const [telefonoLocal, setTelefonoLocal] = useState('');
   const [correoElectronico, setCorreoElectronico] = useState('');
   const [contrasena, setContrasena] = useState('');
@@ -32,11 +34,19 @@ function RegistrarCliente() {
     evento.preventDefault();
     setError(null);
     if(rut.length < 11){
-      setError('Ingresa un rut correcto');
+      setError('Ingrese un rut correcto');
       return;
-    }  
+    }
+    if(!nombre){
+      setError('Ingrese su nombre');
+      return;
+    }
+    if(!apellido){
+      setError('Ingrese su apellido');
+      return;
+    }   
     if (!fechaNacimiento) {
-      setError('Selecciona la fecha de nacimiento completa');
+      setError('Seleccione la fecha de nacimiento completa');
       return;
     }
 
@@ -57,12 +67,14 @@ function RegistrarCliente() {
           correo_electronico: correoElectronico,
           contrasena,
           fecha_nacimiento: fechaNacimiento,
+          nombre,
+          apellido
         }),
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'No se pudo registrar el cliente');
+        throw new Error(data.error || 'Lo siento, no se pudo registrar el cliente');
       }
 
       setExito(true);
@@ -90,7 +102,27 @@ function RegistrarCliente() {
             required
           />
         </label>
+        <label className="registro-label">
+        Nombre
+        <input
+          type="text"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          placeholder="Juan"
+          required
+        />
+      </label>
 
+      <label className="registro-label">
+        Apellido
+        <input
+          type="text"
+          value={apellido}
+          onChange={(e) => setApellido(e.target.value)}
+          placeholder="Pérez"
+          required
+        />
+      </label>
         <label className="registro-label">
           Número telefónico
           <div className="telefono-grupo">
