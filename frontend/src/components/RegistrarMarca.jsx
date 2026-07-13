@@ -4,7 +4,7 @@ import { fetchAutenticado } from '../api';
 import './RegistroForm.css';
 
 function RegistrarMarca() {
-  const [nombre, setNombre] = useState('');
+  const [nombre_marca, setNombre] = useState('');
   const [error, setError] = useState(null);
   const [exito, setExito] = useState(false);
   const [cargando, setCargando] = useState(false);
@@ -13,8 +13,8 @@ function RegistrarMarca() {
     evento.preventDefault();
     setError(null);
 
-    if (!nombre.trim()) {
-      setError('Ingresá el nombre de la marca');
+    if (!nombre_marca.trim()) {
+      setError('Ingresa el nombre de la marca');
       return;
     }
 
@@ -24,7 +24,7 @@ function RegistrarMarca() {
       const res = await fetchAutenticado('/productos/marcas/registrar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ nombre }),
+        body: new URLSearchParams({ nombre_marca }),
       });
 
       if (!res.ok) {
@@ -50,7 +50,7 @@ function RegistrarMarca() {
           Nombre
           <input
             type="text"
-            value={nombre}
+            value={nombre_marca}
             onChange={(e) => setNombre(e.target.value)}
             placeholder="Mobil"
             maxLength={30}
@@ -61,7 +61,7 @@ function RegistrarMarca() {
         {error && <p className="registro-error">{error}</p>}
         {exito && (
           <p className="registro-exito">
-            ¡Marca registrada! Ya podés seleccionarla al registrar un producto.
+            ¡Marca registrada! Ya poduedes seleccionarla al registrar un producto.
           </p>
         )}
 
