@@ -1,3 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --color-fondo: #f5f6f8;
+  --color-superficie: #ffffff;
+  --color-texto: #1c2b3a;
+  --color-sidebar: #14212e;
+  --color-acento-azul: #2b6ca3;
+  --color-acento-ambar: #e0912f;
+  --fuente-marca: 'Space Grotesk', sans-serif;
+  --fuente-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -9,72 +22,130 @@ body {
 .app-layout {
   display: flex;
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f5f6f8;
-  color: #1c2b3a;
+  font-family: var(--fuente-base);
+  background: var(--color-fondo);
+  color: var(--color-texto);
 }
 
 /* ---------- Sidebar ---------- */
 
 .app-sidebar {
-  width: 250px;
+  width: 260px;
   flex-shrink: 0;
-  background: #1c2b3a;
+  background: var(--color-sidebar);
   color: #fff;
-  padding: 28px 18px;
-}
-
-.app-sidebar-titulo {
-  margin: 0 0 24px;
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  padding-bottom: 16px;
-}
-
-.app-sidebar-lista {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+  padding: 24px 18px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
 
-.app-sidebar-link {
-  display: block;
-  padding: 11px 14px;
-  border-radius: 8px;
-  color: #cbd3dc;
+.app-marca {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #fff;
   text-decoration: none;
-  font-size: 0.95rem;
+  font-family: var(--fuente-marca);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.app-marca svg {
+  color: var(--color-acento-ambar);
+}
+
+.app-sidebar-cuenta {
+  margin-top: 20px;
+}
+
+.cuenta-tarjeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.cuenta-tarjeta-login {
+  transition: background 0.15s ease;
+}
+
+.cuenta-tarjeta-login:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cuenta-avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-acento-azul);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--fuente-marca);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.cuenta-avatar-vacio {
+  background: rgba(255, 255, 255, 0.1);
+  color: #cbd3dc;
+}
+
+.cuenta-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cuenta-nombre {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cuenta-rol {
+  font-size: 0.75rem;
+  color: var(--color-acento-ambar);
   font-weight: 500;
+  margin-top: 1px;
+}
+
+.cuenta-tarjeta-login .cuenta-rol {
+  color: #8a94a3;
+}
+
+.app-sidebar-logout {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #cbd3dc;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.app-sidebar-link:hover {
+.app-sidebar-logout:hover {
   background: rgba(255, 255, 255, 0.06);
   color: #fff;
-}
-
-.app-sidebar-link-activo {
-  background: #2b5f8a;
-  color: #fff;
-}
-
-.app-sidebar-sesion {
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.app-sidebar-sesion button.app-sidebar-link {
-  width: 100%;
-  background: none;
-  border: none;
-  font-family: inherit;
-  cursor: pointer;
 }
 
 /* ---------- Contenido ---------- */
@@ -82,22 +153,6 @@ body {
 .app-contenido {
   flex: 1;
   min-width: 0;
-}
-
-.pagina-inicio {
-  padding: 40px;
-}
-
-.pagina-inicio h1 {
-  margin: 0 0 8px;
-  font-size: 1.7rem;
-  color: #1c2b3a;
-}
-
-.pagina-inicio p {
-  margin: 0;
-  color: #5a6472;
-  font-size: 1rem;
 }
 
 /* ---------- Responsive ---------- */
@@ -109,15 +164,30 @@ body {
 
   .app-sidebar {
     width: 100%;
-    padding: 16px;
-  }
-
-  .app-sidebar-lista {
     flex-direction: row;
-    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
   }
 
-  .app-sidebar-link {
-    padding: 8px 12px;
+  .app-marca {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .app-sidebar-cuenta {
+    margin-top: 0;
+  }
+
+  .cuenta-info {
+    display: none;
+  }
+
+  .app-sidebar-logout {
+    margin-top: 0;
+  }
+
+  .app-sidebar-logout span {
+    display: none;
   }
 }

@@ -20,7 +20,7 @@ def login(request):
 
     with connection.cursor() as cursor:
         cursor.execute(
-            'SELECT u.contrasena FROM lubrishell.Usuario u WHERE RUT = %s',
+            'SELECT u.contrasena, u.nombre, u.apellido FROM lubrishell.Usuario u WHERE RUT = %s',
             [rut]
         )
         fila = cursor.fetchone()
@@ -28,7 +28,8 @@ def login(request):
     if fila is None or not check_password(password, fila[0]):
         return JsonResponse({'error': 'RUT o contraseña incorrectos'}, status=401)
 
-    # Determinar el rol: primero busca en Personal, si no está, es Cliente
+    nombre = fila[1]
+    apellido = fila[2]
     with connection.cursor() as cursor:
         cursor.execute('SELECT rol FROM lubrishell.Personal WHERE RUT = %s', [rut])
         fila_personal = cursor.fetchone()
@@ -36,7 +37,7 @@ def login(request):
     rol = fila_personal[0] if fila_personal else 'cliente'
 
     token = generar_token(rut, rol)
-    return JsonResponse({'token': token, 'rol': rol})
+    return JsonResponse({'token': token, 'rol': rol, 'nombre': nombre, 'apellido':apellido})
 
 def obtener_categorias(request):
     with connection.cursor() as cursor:

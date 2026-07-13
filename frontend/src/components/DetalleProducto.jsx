@@ -23,7 +23,7 @@ function DetalleProductoInterno({ sku }) {
       })
       .then((data) => setProducto(data))
       .catch((err) => setError(err.message))
-      .finally(() => setCargando(false)); // esto SÍ está bien: corre dentro de un callback async
+      .finally(() => setCargando(false)); 
   }, [sku]);
 
   if (cargando) return <p className="estado-info">Cargando producto...</p>;
@@ -54,6 +54,10 @@ function DetalleProductoInterno({ sku }) {
           <span className="detalle-producto-marca">{producto.marca}</span>
           <h1 className="detalle-producto-nombre">{producto.nombre}</h1>
           <p className="detalle-producto-sku">SKU: {producto.sku}</p>
+
+          {producto.categoria && (
+            <p className="detalle-producto-categoria">{producto.categoria}</p>
+          )}
 
           {producto.descripcion && (
             <p className="detalle-producto-descripcion">{producto.descripcion}</p>
