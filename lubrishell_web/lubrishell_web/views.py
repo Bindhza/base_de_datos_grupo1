@@ -975,3 +975,48 @@ def despachar(request, id_entrega):
         return JsonResponse({'error': f'Error de integridad en la base de datos: {str(e)}'}, status=400)
     except Exception as e:
         return JsonResponse({'error': f'Error en el servidor: {str(e)}'}, status=500)
+
+@login_requerido
+@rol_requerido('jefe_bodega', 'administrador')
+def resumen_entregas(request):
+    """Consulta del hito para RF 3.6: resumen de las entregas segun su metodo,
+    con cuantas hay, unidades totales y promedio de unidades por entrega."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            '''
+            SELECT e.tipo_entrega,
+                   COUNT(*)        AS numero_entregas,
+                   SUM(e.cantidad) AS unidades_totales,
+                   ROUND(AVG(e.cantidad), 1) AS promedio_por_entrega
+            FROM lubrishell.Entrega e
+            GROUP BY e.tipo_entrega
+            ORDER BY unidades_totales DESC
+            '''
+        )
+        return JsonResponse(dictfetchall(cursor), safe=False)
+
+
+@login_requerido
+@rol_requerido('vendedor', 'administrador')
+def desempeno_vendedores(request):
+    """numero de entregas en sucursal ya
+    completadas por cada vendedor"""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            '''
+            SELECT v.RUT_vendedor,
+                   u.nombre,
+                   u.apellido,
+                   COUNT(*) AS entregas_completadas
+            FROM lubrishell.EntregaEnSucursal v
+            JOIN lubrishell.Usuario u ON u.RUT = v.RUT_vendedor
+            WHERE v.id_entrega IN (
+                    SELECT j.id_entrega
+                    FROM lubrishell.EntregaEnSucursal_EstadoEntregaSucursal j
+                    JOIN lubrishell.Estado_entrega_sucursal es ON es.id_estado_e_s = j.id_estado_e_s
+                    WHERE es.estado_s = 'entregada')
+            GROUP BY v.RUT_vendedor, u.nombre, u.apellido
+            ORDER BY entregas_completadas DESC
+            '''
+        )
+        return JsonResponse(dictfetchall(cursor), safe=False)

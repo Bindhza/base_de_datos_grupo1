@@ -5,6 +5,7 @@ import './Entregas.css';
 
 function PrepararEntregas() {
   const [entregas, setEntregas] = useState([]);
+  const [resumen, setResumen] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
   const [cantidades, setCantidades] = useState({});
@@ -30,6 +31,12 @@ function PrepararEntregas() {
       })
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
+
+    // resumen de entregas por metodo
+    fetchAutenticado('/entregas/resumen/')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setResumen(data))
+      .catch(() => setResumen([]));
   }, []);
 
   useEffect(() => {
@@ -78,6 +85,24 @@ function PrepararEntregas() {
         <p>Entregas en sucursal pendientes de armar. Indica la cantidad y márcalas como disponibles para retiro.</p>
       </div>
 
+      {resumen.length > 0 && (
+        <div className="entregas-resumen">
+          {resumen.map((r) => (
+            <div key={r.tipo_entrega} className="entregas-resumen-tarjeta">
+              <span className="entregas-resumen-titulo">
+                {r.tipo_entrega === 'entrega_en_sucursal'
+                  ? 'Retiro en sucursal'
+                  : 'Despacho a domicilio'}
+              </span>
+              <span className="entregas-resumen-dato">{r.numero_entregas} entregas</span>
+              <span className="entregas-resumen-sub">
+                {r.unidades_totales} unidades · promedio {r.promedio_por_entrega} por entrega
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {mensaje && (
         <p className={mensaje.tipo === 'exito' ? 'entregas-mensaje-exito' : 'entregas-mensaje-error'}>
           {mensaje.texto}
@@ -85,7 +110,7 @@ function PrepararEntregas() {
       )}
 
       {entregas.length === 0 ? (
-        <p className="entregas-estado">No hay entregas en preparación. 🎉</p>
+        <p className="entregas-estado">No hay entregas en preparación. </p>
       ) : (
         <div className="entregas-tabla-envoltorio">
           <table className="entregas-tabla">

@@ -122,3 +122,61 @@
   opacity: 0.6;
   cursor: default;
 }
+
+/* Resumen de entregas por metodo */
+
+.entregas-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.entregas-resumen-tarjeta {
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: #fff;
+  border: 1px solid #e2e5ea;
+  border-radius: 14px;
+  padding: 16px 20px;
+}
+
+.entregas-resumen-titulo {
+  color: #5a6472;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.entregas-resumen-dato {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-texto, #1e232b);
+}
+
+.entregas-resumen-sub {
+  color: #8a93a1;
+  font-size: 0.85rem;
+}
+
+/* Ranking de vendedores  */
+
+.entregas-ranking {
+  margin-top: 36px;
+}
+
+.entregas-ranking h2 {
+  font-family: var(--fuente-marca);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-texto, #1e232b);
+  margin: 0 0 4px;
+}
+
+.entregas-ranking-sub {
+  color: #5a6472;
+  font-size: 0.9rem;
+  margin: 0 0 14px;
+}

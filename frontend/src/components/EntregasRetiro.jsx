@@ -5,6 +5,7 @@ import './Entregas.css';
 
 function EntregasRetiro() {
   const [entregas, setEntregas] = useState([]);
+  const [ranking, setRanking] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
   const [mensaje, setMensaje] = useState(null);
@@ -21,6 +22,12 @@ function EntregasRetiro() {
       .then((data) => setEntregas(data))
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
+
+    // desempeño de vendedores
+    fetchAutenticado('/entregas/desempeno/')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setRanking(data))
+      .catch(() => setRanking([]));
   }, []);
 
   useEffect(() => {
@@ -110,6 +117,33 @@ function EntregasRetiro() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {ranking.length > 0 && (
+        <div className="entregas-ranking">
+          <h2>Desempeño de vendedores</h2>
+          <p className="entregas-ranking-sub">Entregas en sucursal completadas por cada vendedor</p>
+          <div className="entregas-tabla-envoltorio">
+            <table className="entregas-tabla">
+              <thead>
+                <tr>
+                  <th>Vendedor</th>
+                  <th>RUT</th>
+                  <th>Entregas completadas</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ranking.map((v) => (
+                  <tr key={v.rut_vendedor}>
+                    <td>{v.nombre} {v.apellido}</td>
+                    <td>{v.rut_vendedor}</td>
+                    <td>{v.entregas_completadas}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
