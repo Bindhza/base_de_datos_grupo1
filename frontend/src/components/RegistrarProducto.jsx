@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchAutenticado } from '../api';
+import { formatearPrecio } from '../utils/FormatoPrecio';
 import './RegistroForm.css';
 
 const API_URL = 'http://localhost:8000/api';
+const HOY = new Date().toISOString().split('T')[0];
 
 function RegistrarProducto() {
   const [sku, setSku] = useState('');
@@ -11,7 +13,10 @@ function RegistrarProducto() {
   const [descripcion, setDescripcion] = useState('');
   const [urlImagen, setUrlImagen] = useState('');
   const [idMarca, setIdMarca] = useState('');
-  const [stock, setStock] = useState('');
+  const [cantidadCompra, setCantidadCompra] = useState('');
+  const [precioCompra, setPrecioCompra] = useState('');
+  const [precioVenta, setPrecioVenta] = useState('');  
+  const [fechaCompra, setFechaCompra] = useState('');
   const [idCategoria, setIdCategoria] = useState('');
 
   const [categorias, setCategorias] = useState([]);
@@ -61,9 +66,18 @@ function RegistrarProducto() {
     setSku(soloDigitos);
   }
 
-  function manejarCambioStock(evento) {
+  function manejarCambioCantidadCompra(evento) {
     const soloDigitos = evento.target.value.replace(/\D/g, '');
-    setStock(soloDigitos);
+    setCantidadCompra(soloDigitos);
+  }
+
+  function manejarCambioPrecioCompra(evento) {
+    const soloDigitos = evento.target.value.replace(/\D/g, '');
+    setPrecioCompra(soloDigitos);
+  }
+  function manejarCambioPrecioVenta(evento) {
+    const soloDigitos = evento.target.value.replace(/\D/g, '');
+    setPrecioVenta(soloDigitos);
   }
 
   async function manejarSubmit(evento) {
@@ -76,12 +90,30 @@ function RegistrarProducto() {
     }
 
     if (!idCategoria) {
-      setError('Seleccioná una categoría');
+      setError('Selecciona una categoría');
       return;
     }
 
     if (!idMarca) {
-      setError('Seleccioná una marca');
+      setError('Selecciona una marca');
+      return;
+    }
+    if (cantidadCompra <= 0) {
+      setError('Ingresa una cantidad de compra válida');
+      return;
+    }
+    if (precioCompra <= 0) {
+      setError('Ingresa un precio de compra válido');
+      return;
+    }
+    if (precioVenta <= 0) {
+      setError('Ingresa un precio de venta válido');
+      return;
+    }
+
+
+    if (!fechaCompra) {
+      setError('Selecciona la fecha de compra');
       return;
     }
 
@@ -97,8 +129,11 @@ function RegistrarProducto() {
           descripcion,
           url_imagen: urlImagen,
           id_marca: idMarca,
-          stock: stock || '0',
+          cantidad_compra: cantidadCompra || '0',
           id_categoria: idCategoria,
+          precio_compra: precioCompra,
+          precio_venta: precioVenta,
+          fecha_compra: fechaCompra,
         }),
       });
 
@@ -112,7 +147,10 @@ function RegistrarProducto() {
       setNombre('');
       setDescripcion('');
       setUrlImagen('');
-      setStock('');
+      setCantidadCompra('');
+      setPrecioCompra('');
+      setPrecioVenta('');
+      setFechaCompra('');
       if (marcas.length > 0) {
         setIdMarca(String(marcas[0].id_marca));
       }
@@ -157,14 +195,14 @@ function RegistrarProducto() {
         </label>
 
         <label className="registro-label">
-        Descripción
-        <textarea
+          Descripción
+          <textarea
             className="registro-textarea-fija"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
             placeholder="Detalle del producto (opcional)"
             maxLength={300}
-        />
+          />
         </label>
 
         <label className="registro-label">
@@ -174,6 +212,7 @@ function RegistrarProducto() {
             value={urlImagen}
             onChange={(e) => setUrlImagen(e.target.value)}
             placeholder="https://lubrishell.cl/img/1010.jpg"
+            required
           />
         </label>
 
@@ -202,13 +241,51 @@ function RegistrarProducto() {
         </label>
 
         <label className="registro-label">
-          Stock
+          Cantidad comprada (unidades)
           <input
             type="text"
             inputMode="numeric"
-            value={stock}
-            onChange={manejarCambioStock}
+            value={cantidadCompra}
+            onChange={manejarCambioCantidadCompra}
             placeholder="0"
+            required
+          />
+        </label>
+
+        <label className="registro-label">
+          Precio de compra
+          <input
+            type="text"
+            inputMode="numeric"
+            value={formatearPrecio(precioCompra)}
+            onChange={manejarCambioPrecioCompra}
+            placeholder="10.000"
+            required
+          />
+        </label>
+
+
+
+        <label className="registro-label">
+          Fecha de compra
+          <input
+            type="date"
+            value={fechaCompra}
+            onChange={(e) => setFechaCompra(e.target.value)}
+            max={HOY}
+            required
+          />
+        </label>
+
+        <label className="registro-label">
+          Precio de venta (por unidad)
+          <input
+            type="text"
+            inputMode="numeric"
+            value={formatearPrecio(precioVenta)}
+            onChange={manejarCambioPrecioVenta}
+            placeholder="15.000"
+            required
           />
         </label>
 

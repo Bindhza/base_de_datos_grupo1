@@ -59,6 +59,8 @@ def obtener_marcas(request):
 @login_requerido
 @rol_requerido('administrador','jefe_bodega')   
 def registrar_marca(request):
+     """ Solo administrador o jefe bodega puede registrar una marca nueva insertandolo a la tabla.
+     Nivel de aislacion de la transacción: RC"""
      nombre_marca = request.POST.get('nombre_marca').lower()
 
      try:
@@ -77,6 +79,7 @@ def registrar_marca(request):
         return JsonResponse({'error': 'La marca ya existía'}, status=409)
          
 def ver_productos(request):
+    """Pedimos todos los productos, para obtener la marca y la categoria hacemos join con las tablas respectivas"""
     with connection.cursor() as cursor:
         cursor.execute(
           'SELECT p.sku, p.nombre, p.url_imagen, m.nombre_marca AS marca, p.stock '
@@ -87,6 +90,8 @@ def ver_productos(request):
     return JsonResponse(datos, safe=False)
 
 def ver_detalle_producto(request, sku):
+    """Solicitamos toda la informacion de un producto haciendo los joins con marca, categoria y precioventa, donde en 
+    esta ultima pedimos el ultimo precio de venta registrado."""
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -121,6 +126,9 @@ def ver_detalle_producto(request, sku):
 
 @csrf_exempt
 def registrar_cliente(request):
+     """En primer lugar validamos el correo electronico,
+     luego hacemos dos operaciones en la misma transacción:
+     Insertamos en la tabla usuario y luego en la de cliente"""
      rut = request.POST.get('rut')
      numero_telefonico = request.POST.get('numero_telefonico')
      correo_electronico = request.POST.get('correo_electronico')
@@ -157,6 +165,9 @@ def registrar_cliente(request):
 @login_requerido
 @rol_requerido('administrador')     
 def registrar_personal(request):
+    """Solo un administrador puede registrar personal.
+    Validamos el correo electronico y el rol.
+    En la misma transacción se registra en la tabla usuario y luego en la de personal"""
     rut = request.POST.get('rut')
     telefono = request.POST.get('numero_telefonico')
     correo = request.POST.get('correo_electronico')
@@ -167,7 +178,11 @@ def registrar_personal(request):
     apellido = request.POST.get('apellido')
     if rol not in ('vendedor', 'jefe_bodega', 'administrador'):
         return JsonResponse({'error': 'Rol inválido'}, status=400)
-
+    try:
+        validate_email(correo)
+    except ValidationError:
+        return JsonResponse({'error': 'Correo electrónico inválido'}, status=400)
+    
     contrasena_hasheada = make_password(password)
 
     try:
@@ -248,22 +263,45 @@ def actualizar_precio(request, sku):
 @login_requerido
 @rol_requerido('jefe_bodega','administrador')  
 def registrar_producto(request):
+    """Solo un administrador o jefe de bodega puede ingresar un nuevo producto.
+    Debe indicar los datos del producto, la compra y la venta de este.
+    En la misma transaccion:
+    - Se inserta en la tabla de producto el producto nuevo 
+    - Se registra la primera compra del producto en compra
+    - Se registra un precio vigente en precio venta"""
     sku = request.POST.get('sku')
     nombre = request.POST.get('nombre')
     descripcion = request.POST.get('descripcion')
     url_imagen = request.POST.get('url_imagen')
-    marca = request.POST.get('marca')
-    stock = request.POST.get('stock')  
+    id_marca = request.POST.get('id_marca')
+    cantidad_compra = request.POST.get('cantidad_compra')  
+    stock = cantidad_compra
     id_categoria = request.POST.get('id_categoria')
+    fecha_compra = request.POST.get('fecha_compra')
+    precio_compra = request.POST.get('precio_compra')
+    precio_venta = request.POST.get('precio_venta')
+    rut_creador= request.rut
 
     try:
         with transaction.atomic():
             with connection.cursor() as cursor:
                 cursor.execute(
                     'INSERT INTO lubrishell.producto'
-                    '(sku, nombre, descripcion, url_imagen, marca, stock, id_categoria) '
+                    '(sku, nombre, descripcion, url_imagen, id_marca, stock, id_categoria) '
                     'VALUES (%s, %s, %s, %s, %s, %s, %s)',
-                    [sku, nombre, descripcion, url_imagen, marca, stock, id_categoria]
+                    [sku, nombre, descripcion, url_imagen, id_marca, stock, id_categoria]
+                )
+                cursor.execute(
+                    'INSERT INTO lubrishell.compra'
+                    '(fecha_compra, precio_compra, cantidad_compra, rut_creador_compra, sku_producto_comprado) '
+                    'VALUES ( %s, %s, %s, %s, %s)',
+                    [fecha_compra, precio_compra, cantidad_compra, rut_creador, sku]
+                )
+                cursor.execute(
+                    'INSERT INTO lubrishell.precioventa'
+                    '(fecha_vigencia, precio_venta, rut_creador, sku_producto) '
+                    'VALUES ( NOW() , %s, %s, %s)',
+                    [precio_venta, rut_creador, sku]
                 )
 
         return JsonResponse({'mensaje': 'Producto creado correctamente'}, status=201)
