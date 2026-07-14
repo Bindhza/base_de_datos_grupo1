@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../useAuth';
+import { useCart } from '../context/CartContext';
 import './DetalleProducto.css';
 
 const API_URL = 'http://localhost:8000/api/productos';
@@ -11,7 +12,8 @@ function DetalleProducto() {
 }
 
 function DetalleProductoInterno({ sku }) {
-  const { rol, token, rut } = useAuth();
+  const { rol, token, rut, estaLogueado } = useAuth();
+  const { addToCart } = useCart();
   const navigate = useNavigate();
   const [producto, setProducto] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -113,6 +115,13 @@ function DetalleProductoInterno({ sku }) {
     }
   };
 
+  const [cantidadCarrito, setCantidadCarrito] = useState(1);
+
+  const manejarAgregarCarrito = () => {
+    addToCart(producto, cantidadCarrito);
+    alert('Añadido al carrito');
+  };
+
   if (cargando) return <p className="estado-info">Cargando producto...</p>;
 
   if (error) {
@@ -164,12 +173,30 @@ function DetalleProductoInterno({ sku }) {
             )}
           </div>
 
-          <button
-            className="boton-agregar"
-            disabled={producto.stock === 0}
-          >
-            {producto.stock > 0 ? 'Agregar al carrito' : 'No disponible'}
-          </button>
+          {producto.stock > 0 && estaLogueado && rol === 'cliente' && (
+            <div className="agregar-carrito-seccion">
+              <div className="selector-cantidad-moderno">
+                <button 
+                  className="btn-cantidad" 
+                  onClick={() => setCantidadCarrito(Math.max(1, cantidadCarrito - 1))}
+                  disabled={cantidadCarrito <= 1}
+                >
+                  -
+                </button>
+                <span className="valor-cantidad">{cantidadCarrito}</span>
+                <button 
+                  className="btn-cantidad" 
+                  onClick={() => setCantidadCarrito(Math.min(producto.stock, cantidadCarrito + 1))}
+                  disabled={cantidadCarrito >= producto.stock}
+                >
+                  +
+                </button>
+              </div>
+              <button className="boton-agregar" onClick={manejarAgregarCarrito}>
+                Agregar al carrito
+              </button>
+            </div>
+          )}
           
         </div>
       </div>

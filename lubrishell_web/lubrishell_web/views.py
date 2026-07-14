@@ -1103,4 +1103,111 @@ def variacion_precios(request):
         resultados = dictfetchall(cursor)
 
     return JsonResponse(resultados, safe=False)
+    return JsonResponse(resultados, safe=False)
 
+def obtener_sucursales(request):
+    """Obtiene las sucursales disponibles para retiro."""
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id_sucursal, comuna, calle, numero FROM lubrishell.Sucursal")
+        return JsonResponse(dictfetchall(cursor), safe=False)
+
+@csrf_exempt
+@login_requerido
+def procesar_checkout(request):
+    """Procesa una compra completa, gestionando el carrito y bloqueos de concurrencia."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+        
+    try:
+        body = json.loads(request.body)
+        carrito = body.get('carrito', [])
+        metodo_pago = body.get('metodo_pago', 'debito')
+        tipo_entrega = body.get('tipo_entrega', 'entrega_en_sucursal')
+        tipo_doc = body.get('tipo_doc', 'boleta')
+        rut_empresa = body.get('rut_empresa', None)
+        
+        rut_cliente = request.rut
+        
+        if not carrito:
+            return JsonResponse({'error': 'El carrito está vacío'}, status=400)
+            
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                monto_total = 0
+                for item in carrito:
+                    sku = item['sku']
+                    cantidad = item['cantidad']
+                    
+                    cursor.execute('SELECT stock, nombre FROM lubrishell.Producto WHERE SKU = %s FOR UPDATE', [sku])
+                    row = cursor.fetchone()
+                    if not row:
+                        raise ValueError(f"Producto SKU {sku} no encontrado")
+                    stock, nombre = row
+                    if stock < cantidad:
+                        raise ValueError(f"Stock insuficiente para {nombre} (Disponible: {stock})")
+                        
+                    cursor.execute('UPDATE lubrishell.Producto SET stock = stock - %s WHERE SKU = %s', [cantidad, sku])
+                    
+                    cursor.execute('''
+                        SELECT precio_venta FROM lubrishell.PrecioVenta 
+                        WHERE SKU_producto = %s 
+                        ORDER BY fecha_vigencia DESC NULLS LAST LIMIT 1
+                    ''', [sku])
+                    precio_row = cursor.fetchone()
+                    precio = precio_row[0] if precio_row else 0
+                    monto_total += precio * cantidad
+
+                cursor.execute('SELECT COALESCE(MAX(id_orden_compra), 0) + 1 FROM lubrishell.Orden_Compra')
+                id_orden_compra = cursor.fetchone()[0]
+                
+                cursor.execute('SELECT COALESCE(MAX(folio), 0) + 1 FROM lubrishell.Documento_Tributario')
+                folio = cursor.fetchone()[0]
+
+                cursor.execute('SET CONSTRAINTS ALL DEFERRED;')
+
+                rut_emisor = '76123456-K'
+                cursor.execute('''
+                    INSERT INTO lubrishell.Documento_Tributario (folio, fecha_emision, monto_total, RUT_empresa, id_orden_compra, tipo_doc)
+                    OVERRIDING SYSTEM VALUE
+                    VALUES (%s, NOW(), %s, %s, %s, %s)
+                ''', [folio, monto_total, rut_emisor, id_orden_compra, tipo_doc])
+                
+                if tipo_doc == 'factura':
+                    if not rut_empresa:
+                        raise ValueError("Se requiere RUT empresa para factura")
+                    # Simular validación API: insertar empresa si no existe para evitar error de Foreign Key
+                    cursor.execute('SELECT 1 FROM lubrishell.Empresa WHERE RUT = %s', [rut_empresa])
+                    if not cursor.fetchone():
+                        cursor.execute('INSERT INTO lubrishell.Empresa VALUES (%s, %s, %s)', [rut_empresa, 'Empresa Generica SA', 'Giro Comercial'])
+                    
+                    cursor.execute('INSERT INTO lubrishell.Factura (folio, RUT_empresa_cliente, estado_factura) VALUES (%s, %s, %s)', [folio, rut_empresa, 'aceptado'])
+                else:
+                    cursor.execute('INSERT INTO lubrishell.Boleta (folio, estado_boleta) VALUES (%s, %s)', [folio, 'aceptado'])
+
+                cursor.execute('''
+                    INSERT INTO lubrishell.Orden_Compra (id_orden_compra, estado, fecha_creacion, metodo_de_pago, RUT_cliente, folio_doc_trib)
+                    OVERRIDING SYSTEM VALUE
+                    VALUES (%s, %s, NOW(), %s, %s, %s)
+                ''', [id_orden_compra, 'pendiente', metodo_pago, rut_cliente, folio])
+                
+                for item in carrito:
+                    cursor.execute('INSERT INTO lubrishell.Producto_OrdenDeCompra VALUES (%s, %s, %s)', [item['sku'], id_orden_compra, item['cantidad']])
+
+                cursor.execute('SELECT COALESCE(MAX(id_entrega), 0) FROM lubrishell.Entrega')
+                max_entrega = cursor.fetchone()[0]
+                
+                for item in carrito:
+                    max_entrega += 1
+                    cursor.execute('''
+                        INSERT INTO lubrishell.Entrega (id_entrega, cantidad, SKU_producto, tipo_entrega, id_orden_compra)
+                        OVERRIDING SYSTEM VALUE
+                        VALUES (%s, %s, %s, %s, %s)
+                    ''', [max_entrega, item['cantidad'], item['sku'], tipo_entrega, id_orden_compra])
+                
+        return JsonResponse({'mensaje': 'Compra registrada exitosamente', 'id_orden': id_orden_compra})
+    except IntegrityError as e:
+        return JsonResponse({'error': 'Error de integridad en la base de datos: ' + str(e)}, status=400)
+    except ValueError as e:
+        return JsonResponse({'error': str(e)}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': 'Error interno: ' + str(e)}, status=500)

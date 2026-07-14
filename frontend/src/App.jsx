@@ -13,6 +13,8 @@ import VariacionPrecios from './components/VariacionPrecios';
 import ProductosMasComprados from './components/ProductosMasComprados';
 import RegistrarMarca from './components/RegistrarMarca';
 import PrepararEntregas from './components/PrepararEntregas';
+import CartFloatingButton from './components/CartFloatingButton';
+import Checkout from './components/Checkout';
 import EntregasRetiro from './components/EntregasRetiro';
 import DespacharDomicilio from './components/DespacharDomicilio';
 import RutaProtegida from './components/RutaProtegida';
@@ -140,6 +142,7 @@ function App() {
 
       {/* ================= CONTENIDO PRINCIPAL ================= */}
       <main className="app-contenido">
+        <CartFloatingButton />
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/login" element={<Login />} />
@@ -147,6 +150,7 @@ function App() {
           <Route path="/categorias" element={<Categorias />} />
           <Route path="/productos" element={<ListaProductos />} />
           <Route path="/productos/:sku" element={<DetalleProducto />} />
+          <Route path="/checkout" element={<Checkout />} />
 
           <Route
             path="/productos/crear"
