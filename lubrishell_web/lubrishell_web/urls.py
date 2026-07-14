@@ -35,6 +35,7 @@ urlpatterns = [
     path('api/clientes/registrar', views.registrar_cliente, name = 'registrar_cliente'),
     path('api/personal/registrar', views.registrar_personal, name = 'registrar_personal'),
     path('api/entregas/preparacion/', views.entregas_en_preparacion, name='entregas_en_preparacion'),
+    path('api/entregas/despacho-domicilio/preparacion/', views.despachos_en_preparacion, name='despachos_en_preparacion'),
     path('api/entregas/retiro/', views.entregas_disponibles_retiro, name='entregas_disponibles_retiro'),
     path('api/entregas/resumen/', views.resumen_entregas, name='resumen_entregas'),
     path('api/entregas/desempeno/', views.desempeno_vendedores, name='desempeno_vendedores'),

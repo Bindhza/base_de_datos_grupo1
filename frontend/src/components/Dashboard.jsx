@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Activity,
   PackageCheck,
+  Truck,
 } from 'lucide-react';
 import { useAuth } from '../useAuth';
 import './Dashboard.css';
@@ -67,6 +68,12 @@ function Dashboard() {
         icono: PackageCheck,
         titulo: 'Preparar entregas',
         descripcion: 'Arma los paquetes pendientes para retiro en sucursal',
+      },
+      {
+        to: '/entregas/despachar',
+        icono: Truck,
+        titulo: 'Despachar a domicilio',
+        descripcion: 'Registra los despachos y códigos de seguimiento para domicilio',
       }
     );
   }

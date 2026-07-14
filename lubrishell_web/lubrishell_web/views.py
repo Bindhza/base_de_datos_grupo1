@@ -525,7 +525,7 @@ _SQL_ESTADO_ACTUAL_SUCURSAL = '''
 
 _SQL_ESTADO_ACTUAL_DOMICILIO = '''
     SELECT st.estado_d
-    FROM lubrishell.Entrega_EstadoEntrega pu
+    FROM lubrishell.despachodomicilio_estadoentregadomicilio pu
     JOIN lubrishell.Estado_entrega_domicilio st ON st.id_estado_e_d = pu.id_estado_e_d
     WHERE pu.id_entrega = %s
     ORDER BY st.fecha_cambio DESC, st.id_estado_e_d DESC
@@ -574,6 +574,45 @@ def _listar_entregas_sucursal_por_estado(estado):
         return dictfetchall(cursor)
 
 
+def _listar_despachos_domicilio_por_estado(estado):
+    """Entregas a domicilio cuyo estado actual es `estado`."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            '''
+            SELECT
+                e.id_entrega,
+                e.cantidad,
+                e.sku_producto,
+                p.nombre AS producto,
+                e.id_orden_compra,
+                poc.cantidad AS cantidad_solicitada,
+                d.comuna,
+                d.calle,
+                d.numero,
+                d.codigo_seguimiento,
+                est.estado_d AS estado,
+                est.fecha_cambio AS fecha_ultimo_estado
+            FROM lubrishell.Entrega e
+            JOIN lubrishell.despachoadomicilio d ON d.id_entrega = e.id_entrega
+            JOIN lubrishell.Producto p ON p.sku = e.sku_producto
+            LEFT JOIN lubrishell.Producto_OrdenDeCompra poc
+                ON poc.id_orden_compra = e.id_orden_compra AND poc.sku = e.sku_producto
+            JOIN LATERAL (
+                SELECT st.estado_d, st.fecha_cambio
+                FROM lubrishell.despachodomicilio_estadoentregadomicilio pu
+                JOIN lubrishell.Estado_entrega_domicilio st ON st.id_estado_e_d = pu.id_estado_e_d
+                WHERE pu.id_entrega = e.id_entrega
+                ORDER BY st.fecha_cambio DESC, st.id_estado_e_d DESC
+                LIMIT 1
+            ) est ON TRUE
+            WHERE est.estado_d = %s
+            ORDER BY e.id_entrega
+            ''',
+            [estado]
+        )
+        return dictfetchall(cursor)
+
+
 def _insertar_estado_sucursal(cursor, id_entrega, estado):
     """Inserta un nuevo estado en el historial de la entrega (estado + fila puente).
     id_estado_e_s es una columna IDENTITY (GENERATED ALWAYS): la BD asigna el id
@@ -590,20 +629,22 @@ def _insertar_estado_sucursal(cursor, id_entrega, estado):
         [id_entrega, nuevo_id]
     )
 
-def _insertar_estado_domicilio(cursor, id_entrega, estado):
-    """Inserta un nuevo estado en el historial de la entrega (estado + fila puente).
-    id_estado_e_s es una columna IDENTITY (GENERATED ALWAYS): la BD asigna el id
-    y lo recuperamos con RETURNING para la fila puente."""
+def _actualizar_estado_domicilio(cursor, id_entrega, estado):
+    """Busca el id_estado_e_d asociado a id_entrega en la tabla puente y actualiza
+    su estado en Estado_entrega_domicilio."""
     cursor.execute(
-        'INSERT INTO lubrishell.Estado_entrega_domicilio (estado_d, fecha_cambio) '
-        'VALUES (%s, NOW()) RETURNING id_estado_e_d',
-        [estado]
-    )
-    nuevo_id = cursor.fetchone()[0]
-    cursor.execute(
-        'INSERT INTO lubrishell.Entrega_EstadoEntrega (id_entrega, id_estado_e_d) '
-        'VALUES (%s, %s)',
-        [id_entrega, nuevo_id]
+        '''
+        UPDATE lubrishell.Estado_entrega_domicilio
+        SET estado_d = %s, fecha_cambio = NOW()
+        WHERE id_estado_e_d = (
+            SELECT id_estado_e_d
+            FROM lubrishell.despachodomicilio_estadoentregadomicilio
+            WHERE id_entrega = %s
+            ORDER BY id_estado_e_d DESC
+            LIMIT 1
+        )
+        ''',
+        [estado, id_entrega]
     )
 
 
@@ -613,6 +654,13 @@ def entregas_en_preparacion(request):
     """entregas en sucursal pendientes de preparar,
     para que el jefe de bodega arme los paquetes."""
     return JsonResponse(_listar_entregas_sucursal_por_estado('en_preparacion'), safe=False)
+
+@login_requerido
+@rol_requerido('jefe_bodega', 'administrador')
+def despachos_en_preparacion(request):
+    """entregas a domicilio pendientes de despachar,
+    para que el jefe de bodega asigne código de seguimiento."""
+    return JsonResponse(_listar_despachos_domicilio_por_estado('en_preparacion'), safe=False)
 
 
 @login_requerido
@@ -820,12 +868,11 @@ def preparar_entrega_domicilio(request, id_entrega):
                         status=409
                     )
 
-                # Registrar la cantidad armada y el nuevo estado
+                # Registrar la cantidad armada
                 cursor.execute(
                     'UPDATE lubrishell.Entrega SET cantidad = %s WHERE id_entrega = %s',
                     [cantidad, id_entrega]
                 )
-                _insertar_estado_domicilio(cursor, id_entrega, 'despachada')
 
         return JsonResponse(
             {'mensaje': 'Entrega preparada: lista para despacho', 'id_entrega': id_entrega,
@@ -943,8 +990,8 @@ def despachar(request, id_entrega):
                         status=409
                     )
 
-                # 1 y 2. Registrar el nuevo estado en Estado_entrega_domicilio e insertar en la tabla intermedia
-                _insertar_estado_domicilio(cursor, id_entrega, 'despachada')
+                # 1 y 2. Actualizar el estado en Estado_entrega_domicilio
+                _actualizar_estado_domicilio(cursor, id_entrega, 'despachada')
 
                 # 3. Registrar al jefe de bodega y el código de seguimiento en despachoadomicilio
                 cursor.execute(

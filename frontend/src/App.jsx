@@ -14,6 +14,7 @@ import ProductosMasComprados from './components/ProductosMasComprados';
 import RegistrarMarca from './components/RegistrarMarca';
 import PrepararEntregas from './components/PrepararEntregas';
 import EntregasRetiro from './components/EntregasRetiro';
+import DespacharDomicilio from './components/DespacharDomicilio';
 import RutaProtegida from './components/RutaProtegida';
 import LanzarDescuento from './components/LanzarDescuento';
 import { useAuth } from './useAuth';
@@ -212,6 +213,16 @@ function App() {
             element={
               <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
                 <PrepararEntregas />
+              </RutaProtegida>
+            }
+          />
+
+          {/* despachar a domicilio */}
+          <Route
+            path="/entregas/despachar"
+            element={
+              <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
+                <DespacharDomicilio />
               </RutaProtegida>
             }
           />

@@ -1,0 +1,30 @@
+/* Custom styles for DespacharDomicilio component */
+
+.despacho-seguimiento-input {
+  width: 160px;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.despacho-seguimiento-input:focus {
+  outline: none;
+  border-color: var(--color-acento-ambar, #d9a326);
+  box-shadow: 0 0 0 3px rgba(217, 163, 38, 0.15);
+}
+
+.despacho-seguimiento-input:disabled {
+  background: #f1f5f9;
+  cursor: not-allowed;
+}
+
+/* Ensure consistent button transitions */
+.entregas-boton {
+  transition: background-color 0.15s ease, filter 0.15s ease, transform 0.1s ease;
+}
+
+.entregas-boton:active:not(:disabled) {
+  transform: scale(0.97);
+}
