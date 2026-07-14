@@ -9,6 +9,7 @@ import RegistrarCliente from './components/RegistrarCliente';
 import RegistrarPersonal from './components/RegistrarPersonal';
 import RegistrarProducto from './components/RegistrarProducto';
 import InventarioInmovilizado from './components/InventarioInmovilizado';
+import VariacionPrecios from './components/VariacionPrecios';
 import ProductosMasComprados from './components/ProductosMasComprados';
 import RegistrarMarca from './components/RegistrarMarca';
 import PrepararEntregas from './components/PrepararEntregas';
@@ -195,6 +196,14 @@ function App() {
             element={
               <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
                 <ProductosMasComprados />
+              </RutaProtegida>
+              }
+          />
+          <Route
+            path="/productos/variacion-precios/"
+            element={
+              <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
+                <VariacionPrecios />
               </RutaProtegida>
               }
           />

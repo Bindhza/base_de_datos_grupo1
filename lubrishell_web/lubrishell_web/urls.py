@@ -26,6 +26,7 @@ urlpatterns = [
     path('api/productos/marcas/registrar', views.registrar_marca, name='marcas'),
     path('api/productos/inmovilizado/', views.obtener_productos_inmovilizados, name='productos_inmovilizados'),
     path('api/productos/mas-comprados/', views.productos_mas_comprados, name='mas_comprados'),
+    path('api/productos/variacion-precios/', views.variacion_precios, name='variacion_precios'),
     path('api/productos/', views.ver_productos, name = 'productos'),
     path('api/productos/registrar', views.registrar_producto, name = 'registrar_productos'),
     path('api/productos/<int:sku>/', views.ver_detalle_producto, name='ver_detalle_producto'),

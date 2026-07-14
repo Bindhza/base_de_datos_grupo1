@@ -1031,3 +1031,29 @@ def productos_mas_comprados(request):
         resultados = dictfetchall(cursor)
 
     return JsonResponse(resultados, safe=False)
+
+@login_requerido
+@rol_requerido('administrador', 'jefe_bodega')
+def variacion_precios(request):
+    """Obtiene un reporte con la variación histórica de los precios de los productos."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            '''
+            SELECT pv.SKU_producto AS SKU, p.nombre, COUNT(*) AS
+            numero_precios,
+            MIN(pv.precio_venta) AS precio_min, MAX(pv.precio_venta)
+            AS precio_max,
+            ROUND((MAX(pv.precio_venta) - MIN(pv.precio_venta)) * 100.0 / MIN(pv.precio_venta), 1) AS variacion_pct
+            FROM lubrishell.PrecioVenta pv
+            JOIN lubrishell.Producto p ON p.SKU = pv.SKU_producto
+            WHERE EXISTS (SELECT 1 FROM lubrishell.PrecioVenta pv2
+            WHERE pv2.SKU_producto = pv.SKU_producto
+            AND pv2.id_precio_v <> pv.id_precio_v)
+            GROUP BY pv.SKU_producto, p.nombre
+            ORDER BY variacion_pct DESC;
+            '''
+        )
+        resultados = dictfetchall(cursor)
+
+    return JsonResponse(resultados, safe=False)
+

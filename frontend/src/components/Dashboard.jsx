@@ -6,9 +6,10 @@ import {
   PackagePlus,
   Award,
   UserPlus,
-  PackageCheck,
   Store,
   TrendingUp,
+  Activity,
+  PackageCheck,
 } from 'lucide-react';
 import { useAuth } from '../useAuth';
 import './Dashboard.css';
@@ -54,6 +55,12 @@ function Dashboard() {
         icono: TrendingUp,
         titulo: 'Productos más comprados',
         descripcion: 'Conoce los productos más abastecidos a la empresa por los proveedores',
+      },
+      {
+        to: '/productos/variacion-precios',
+        icono: Activity,
+        titulo: 'Variación de Precios',
+        descripcion: 'Analiza el historial y fluctuación de los precios de venta',
       },
       {
         to: '/entregas/preparar',
