@@ -1,0 +1,106 @@
+.contenedor-mas-comprados {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.encabezado-reporte {
+  margin-bottom: 24px;
+}
+
+.encabezado-reporte h2 {
+  margin: 0 0 8px 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1c2b3a;
+}
+
+.descripcion-reporte {
+  color: #5a6472;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.tabla-contenedor {
+  background: #ffffff;
+  border: 1px solid #e2e5ea;
+  border-radius: 12px;
+  overflow-x: auto;
+  box-shadow: 0 4px 12px rgba(15, 40, 70, 0.02);
+}
+
+.tabla-mas-comprados {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.95rem;
+  color: #3d4a58;
+}
+
+.tabla-mas-comprados th {
+  background: #f8fafc;
+  padding: 16px;
+  font-weight: 600;
+  color: #1c2b3a;
+  border-bottom: 1px solid #e2e5ea;
+}
+
+.tabla-mas-comprados td {
+  padding: 16px;
+  border-bottom: 1px solid #eef1f4;
+  vertical-align: middle;
+}
+
+.tabla-mas-comprados tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tabla-mas-comprados tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.celda-derecha {
+  text-align: right;
+}
+
+.celda-centro {
+  text-align: center;
+}
+
+.col-ranking {
+  font-weight: 700;
+  color: #2b6ca3;
+}
+
+.col-sku {
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #1c2b3a;
+  font-weight: bold;
+}
+
+.col-nombre {
+  font-weight: 500;
+  color: #1c2b3a;
+}
+
+.col-total {
+  font-weight: 600;
+  color: #2b5f8a;
+}
+
+.col-promedio {
+  color: #8a94a3;
+}
+
+.estado-info,
+.estado-error {
+  padding: 60px 24px;
+  text-align: center;
+  font-size: 0.95rem;
+  color: #5a6472;
+}
+
+.estado-error {
+  color: #d94e3f;
+}

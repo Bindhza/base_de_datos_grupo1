@@ -1020,3 +1020,25 @@ def desempeno_vendedores(request):
             '''
         )
         return JsonResponse(dictfetchall(cursor), safe=False)
+
+@login_requerido
+@rol_requerido('administrador', 'jefe_bodega')
+def productos_mas_comprados(request):
+    """Obtiene los 10 productos más comprados por la empresa a los proveedores."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            '''
+            SELECT c.SKU_producto_comprado AS SKU, p.nombre,
+            SUM(c.cantidad_compra) AS total_comprado,
+            COUNT(*) AS numero_compras,
+            ROUND(AVG(c.cantidad_compra)) AS promedio_por_compra
+            FROM lubrishell.Compra c
+            JOIN lubrishell.Producto p ON p.SKU = c.SKU_producto_comprado
+            GROUP BY c.SKU_producto_comprado, p.nombre
+            ORDER BY total_comprado DESC
+            LIMIT 10;
+            '''
+        )
+        resultados = dictfetchall(cursor)
+
+    return JsonResponse(resultados, safe=False)

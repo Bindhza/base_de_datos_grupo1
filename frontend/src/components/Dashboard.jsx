@@ -8,6 +8,7 @@ import {
   UserPlus,
   PackageCheck,
   Store,
+  TrendingUp,
 } from 'lucide-react';
 import { useAuth } from '../useAuth';
 import './Dashboard.css';
@@ -47,6 +48,12 @@ function Dashboard() {
         icono: CircleDollarSign,
         titulo: 'Productos inmbolizados',
         descripcion: 'Ve los productos que no se están vendiendo y cuánto dinero está estancado',
+      },
+      {
+        to: '/productos/mas-comprados',
+        icono: TrendingUp,
+        titulo: 'Productos más comprados',
+        descripcion: 'Conoce los productos más abastecidos a la empresa por los proveedores',
       },
       {
         to: '/entregas/preparar',

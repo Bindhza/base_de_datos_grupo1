@@ -9,6 +9,7 @@ import RegistrarCliente from './components/RegistrarCliente';
 import RegistrarPersonal from './components/RegistrarPersonal';
 import RegistrarProducto from './components/RegistrarProducto';
 import InventarioInmovilizado from './components/InventarioInmovilizado';
+import ProductosMasComprados from './components/ProductosMasComprados';
 import RegistrarMarca from './components/RegistrarMarca';
 import PrepararEntregas from './components/PrepararEntregas';
 import EntregasRetiro from './components/EntregasRetiro';
@@ -199,6 +200,14 @@ function App() {
             element={
               <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
                 <InventarioInmovilizado />
+              </RutaProtegida>
+              }
+          />
+          <Route
+            path="/productos/mas-comprados/"
+            element={
+              <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
+                <ProductosMasComprados />
               </RutaProtegida>
               }
           />
