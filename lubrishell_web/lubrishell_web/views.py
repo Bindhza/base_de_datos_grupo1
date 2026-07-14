@@ -898,41 +898,28 @@ def entregar_en_sucursal(request, id_entrega):
 @login_requerido
 @rol_requerido('jefe_bodega', 'administrador')
 def despachar(request, id_entrega):
-    """el jefe de bodega registra el despacho a domicilio y la entrega al cliente.
-    Cambia el estado a 'entregada' y registra al jefe de bodega y datos de despacho.
+    """el jefe de bodega registra el despacho a domicilio.
+    Cambia el estado a 'despachada' y registra al jefe de bodega y el código de seguimiento.
     Validaciones:
       - la entrega existe y es de tipo despacho_a_domicilio
-      - su estado actual es 'despachada'
+      - su estado actual es 'en_preparacion'
     Nivel de aislacion de la transaccion: RC (con FOR UPDATE sobre la entrega)."""
     if request.method != 'POST':
         return JsonResponse({'error': 'Método no permitido'}, status=405)
 
-    # Obtener parámetros del POST o JSON
-    comuna = request.POST.get('comuna')
-    calle = request.POST.get('calle')
-    numero = request.POST.get('numero')
+    # Obtener el código de seguimiento desde el POST o JSON
     codigo_seguimiento = request.POST.get('codigo_seguimiento')
 
-    if None in (comuna, calle, numero, codigo_seguimiento):
+    if codigo_seguimiento is None:
         try:
             body = json.loads(request.body)
-            comuna = comuna or body.get('comuna')
-            calle = calle or body.get('calle')
-            numero = numero or body.get('numero')
-            codigo_seguimiento = codigo_seguimiento or body.get('codigo_seguimiento')
+            codigo_seguimiento = body.get('codigo_seguimiento')
         except json.JSONDecodeError:
             pass
 
-    # Validaciones de los campos requeridos
-    if not comuna or not calle or not numero or not codigo_seguimiento:
-        return JsonResponse({'error': 'Todos los campos de despacho (comuna, calle, numero, codigo_seguimiento) son requeridos'}, status=400)
-
-    try:
-        numero = int(numero)
-        if numero <= 0:
-            return JsonResponse({'error': 'El número de calle debe ser positivo'}, status=400)
-    except (TypeError, ValueError):
-        return JsonResponse({'error': 'El número de calle debe ser un número válido'}, status=400)
+    # Validaciones del campo requerido
+    if not codigo_seguimiento:
+        return JsonResponse({'error': 'El campo codigo_seguimiento es requerido'}, status=400)
 
     try:
         with transaction.atomic():
@@ -950,24 +937,26 @@ def despachar(request, id_entrega):
                 cursor.execute(_SQL_ESTADO_ACTUAL_DOMICILIO, [id_entrega])
                 fila_estado = cursor.fetchone()
                 estado_actual = fila_estado[0] if fila_estado else None
-                if estado_actual != 'despachada':
+                if estado_actual != 'en_preparacion':
                     return JsonResponse(
-                        {'error': f"La entrega no está disponible para ser despachada (estado actual: {estado_actual})"},
+                        {'error': f"La entrega no está en preparación (estado actual: {estado_actual})"},
                         status=409
                     )
 
-                # Registrar los datos en la tabla despachoadomicilio y el nuevo estado
+                # 1 y 2. Registrar el nuevo estado en Estado_entrega_domicilio e insertar en la tabla intermedia
+                _insertar_estado_domicilio(cursor, id_entrega, 'despachada')
+
+                # 3. Registrar al jefe de bodega y el código de seguimiento en despachoadomicilio
                 cursor.execute(
                     'UPDATE lubrishell.despachoadomicilio '
-                    'SET rut_jefe_bodega = %s, comuna = %s, calle = %s, numero = %s, codigo_seguimiento = %s '
+                    'SET rut_jefe_bodega = %s, codigo_seguimiento = %s '
                     'WHERE id_entrega = %s',
-                    [request.rut, comuna, calle, numero, codigo_seguimiento, id_entrega]
+                    [request.rut, codigo_seguimiento, id_entrega]
                 )
-                _insertar_estado_domicilio(cursor, id_entrega, 'entregada')
 
         return JsonResponse(
-            {'mensaje': 'Entrega despachada y registrada como entregada', 'id_entrega': id_entrega,
-             'nuevo_estado': 'entregada'},
+            {'mensaje': 'Entrega despachada exitosamente', 'id_entrega': id_entrega,
+             'nuevo_estado': 'despachada'},
             status=200
         )
 

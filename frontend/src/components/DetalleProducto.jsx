@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../useAuth';
 import './DetalleProducto.css';
 
@@ -11,7 +11,8 @@ function DetalleProducto() {
 }
 
 function DetalleProductoInterno({ sku }) {
-  const { rol, token } = useAuth();
+  const { rol, token, rut } = useAuth();
+  const navigate = useNavigate();
   const [producto, setProducto] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
@@ -232,6 +233,13 @@ function DetalleProductoInterno({ sku }) {
                 </label>
                 <button type="submit" disabled={actualizandoPrecio} className="admin-boton">
                   {actualizandoPrecio ? 'Actualizando...' : 'Actualizar Precio'}
+                </button>
+                <button
+                  type="button"
+                  className="boton-descuento"
+                  onClick={() => navigate('/descuento', { state: { sku, rol, rut } })}
+                >
+                  Registrar un Descuento
                 </button>
               </form>
               {errorPrecio && <p className="admin-error">{errorPrecio}</p>}

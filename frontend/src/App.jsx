@@ -125,20 +125,7 @@ function App() {
               </NavLink>
             </li>
           )}
- 
-          {/* Solo administrador puede aplicar descuentos */}
-          {(rol === 'administrador' || rol === 'jefe_bodega') && (
-            <li>
-              <NavLink
-                to="/descuento"
-                className={({ isActive }) =>
-                  isActive ? 'app-sidebar-link app-sidebar-link-activo' : 'app-sidebar-link'
-                }
-              >
-                <Tag size={18} /> Aplicar Descuento
-              </NavLink>
-            </li>
-          )}
+
         </ul>
 
         {estaLogueado && (

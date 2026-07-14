@@ -242,3 +242,24 @@
     padding: 20px;
   }
 }
+
+.boton-descuento {
+  background: #d97f2b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.boton-descuento:hover {
+  background: #bd6a20;
+}
+
+.boton-descuento:active {
+  transform: scale(0.98);
+}
