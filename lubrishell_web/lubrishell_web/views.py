@@ -630,23 +630,23 @@ def _insertar_estado_sucursal(cursor, id_entrega, estado):
     )
 
 def _actualizar_estado_domicilio(cursor, id_entrega, estado):
-    """Busca el id_estado_e_d asociado a id_entrega en la tabla puente y actualiza
-    su estado en Estado_entrega_domicilio."""
-    cursor.execute(
-        '''
-        UPDATE lubrishell.Estado_entrega_domicilio
-        SET estado_d = %s, fecha_cambio = NOW()
-        WHERE id_estado_e_d = (
-            SELECT id_estado_e_d
-            FROM lubrishell.despachodomicilio_estadoentregadomicilio
-            WHERE id_entrega = %s
-            ORDER BY id_estado_e_d DESC
-            LIMIT 1
-        )
-        ''',
-        [estado, id_entrega]
-    )
-
+    """Ingresa un nuevo estado y lo vincula en la tabla intermedia de la entrega."""
+    
+    #  Insertamos el nuevo registro del estado y pedimos el ID generado
+    cursor.execute('''
+        INSERT INTO lubrishell.estado_entrega_domicilio (estado_d, fecha_cambio)
+        VALUES (%s, NOW())
+        RETURNING id_estado_e_d;
+    ''', [estado])
+    
+    # Capturamos el ID devuelto 
+    id_estado_e_d = cursor.fetchone()[0]
+    
+    # Insertamos la relacion en la tabla intermedia usando el ID capturado
+    cursor.execute('''
+        INSERT INTO lubrishell.despachodomicilio_estadoentregadomicilio (id_entrega, id_estado_e_d)
+        VALUES (%s, %s);
+    ''', [id_entrega, id_estado_e_d])
 
 @login_requerido
 @rol_requerido('jefe_bodega', 'administrador')
@@ -1126,6 +1126,11 @@ def procesar_checkout(request):
         tipo_doc = body.get('tipo_doc', 'boleta')
         rut_empresa = body.get('rut_empresa', None)
         
+        # Extracción de datos de dirección (necesarios para despacho)
+        datos_comuna = body.get('comuna', '')
+        datos_calle = body.get('calle', '')
+        datos_numero = body.get('numero', '')
+        
         rut_cliente = request.rut
         
         if not carrito:
@@ -1157,21 +1162,26 @@ def procesar_checkout(request):
                     precio = precio_row[0] if precio_row else 0
                     monto_total += precio * cantidad
 
-                cursor.execute('SELECT COALESCE(MAX(id_orden_compra), 0) + 1 FROM lubrishell.Orden_Compra')
-                id_orden_compra = cursor.fetchone()[0]
+                # 1. Crear Orden de Compra PRIMERO (es el padre en el nuevo modelo)
+                cursor.execute('''
+                    INSERT INTO lubrishell.Orden_Compra (estado, fecha_creacion, metodo_de_pago, RUT_cliente)
+                    VALUES (%s, NOW(), %s, %s)
+                    RETURNING id_orden_compra;
+                ''', ['pendiente', metodo_pago, rut_cliente])
                 
-                cursor.execute('SELECT COALESCE(MAX(folio), 0) + 1 FROM lubrishell.Documento_Tributario')
-                folio = cursor.fetchone()[0]
+                id_orden_compra = cursor.fetchone()[0]
 
-                cursor.execute('SET CONSTRAINTS ALL DEFERRED;')
-
+                # 2. Crear Documento Tributario SEGUNDO (usando el ID de la orden)
                 rut_emisor = '76123456-K'
                 cursor.execute('''
-                    INSERT INTO lubrishell.Documento_Tributario (folio, fecha_emision, monto_total, RUT_empresa, id_orden_compra, tipo_doc)
-                    OVERRIDING SYSTEM VALUE
-                    VALUES (%s, NOW(), %s, %s, %s, %s)
-                ''', [folio, monto_total, rut_emisor, id_orden_compra, tipo_doc])
+                    INSERT INTO lubrishell.Documento_Tributario (fecha_emision, monto_total, RUT_empresa, id_orden_compra, tipo_doc)
+                    VALUES (NOW(), %s, %s, %s, %s)
+                    RETURNING folio;
+                ''', [monto_total, rut_emisor, id_orden_compra, tipo_doc])
                 
+                folio = cursor.fetchone()[0]
+                
+                # 3. Crear el detalle del documento (Factura o Boleta)
                 if tipo_doc == 'factura':
                     if not rut_empresa:
                         raise ValueError("Se requiere RUT empresa para factura")
@@ -1183,26 +1193,40 @@ def procesar_checkout(request):
                     cursor.execute('INSERT INTO lubrishell.Factura (folio, RUT_empresa_cliente, estado_factura) VALUES (%s, %s, %s)', [folio, rut_empresa, 'aceptado'])
                 else:
                     cursor.execute('INSERT INTO lubrishell.Boleta (folio, estado_boleta) VALUES (%s, %s)', [folio, 'aceptado'])
-
-                cursor.execute('''
-                    INSERT INTO lubrishell.Orden_Compra (id_orden_compra, estado, fecha_creacion, metodo_de_pago, RUT_cliente, folio_doc_trib)
-                    OVERRIDING SYSTEM VALUE
-                    VALUES (%s, %s, NOW(), %s, %s, %s)
-                ''', [id_orden_compra, 'pendiente', metodo_pago, rut_cliente, folio])
                 
+                # 4. Insertar los productos en la orden de compra
                 for item in carrito:
                     cursor.execute('INSERT INTO lubrishell.Producto_OrdenDeCompra VALUES (%s, %s, %s)', [item['sku'], id_orden_compra, item['cantidad']])
 
-                cursor.execute('SELECT COALESCE(MAX(id_entrega), 0) FROM lubrishell.Entrega')
-                max_entrega = cursor.fetchone()[0]
-                
+                # 5. Generar las entregas y sus estados
                 for item in carrito:
-                    max_entrega += 1
                     cursor.execute('''
-                        INSERT INTO lubrishell.Entrega (id_entrega, cantidad, SKU_producto, tipo_entrega, id_orden_compra)
-                        OVERRIDING SYSTEM VALUE
-                        VALUES (%s, %s, %s, %s, %s)
-                    ''', [max_entrega, item['cantidad'], item['sku'], tipo_entrega, id_orden_compra])
+                        INSERT INTO lubrishell.Entrega (cantidad, SKU_producto, tipo_entrega, id_orden_compra)
+                        VALUES (%s, %s, %s, %s)
+                        RETURNING id_entrega;
+                    ''', [item['cantidad'], item['sku'], tipo_entrega, id_orden_compra])
+                    
+                    nuevo_id_entrega = cursor.fetchone()[0]
+
+                    if tipo_entrega == 'despacho_a_domicilio':
+                        
+                        cursor.execute('''
+                            INSERT INTO lubrishell.despachoadomicilio (id_entrega, comuna, calle, numero)
+                            VALUES (%s, %s, %s, %s)
+                        ''', [nuevo_id_entrega, datos_comuna, datos_calle, datos_numero])
+
+                        cursor.execute('''
+                            INSERT INTO lubrishell.Estado_entrega_domicilio (estado_d, fecha_cambio)
+                            VALUES (%s, CURRENT_TIMESTAMP)
+                            RETURNING id_estado_e_d;
+                        ''', ['en_preparacion']) 
+                        
+                        nuevo_id_estado = cursor.fetchone()[0]
+
+                        cursor.execute('''
+                            INSERT INTO lubrishell.despachodomicilio_estadoentregadomicilio (id_entrega, id_estado_e_d)
+                            VALUES (%s, %s)
+                        ''', [nuevo_id_entrega, nuevo_id_estado])
                 
         return JsonResponse({'mensaje': 'Compra registrada exitosamente', 'id_orden': id_orden_compra})
     except IntegrityError as e:
