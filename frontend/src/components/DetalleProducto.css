@@ -229,6 +229,54 @@
   margin-top: 8px;
 }
 
+.agregar-carrito-seccion {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.selector-cantidad-moderno {
+  display: flex;
+  align-items: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  overflow: hidden;
+  width: fit-content;
+  background: white;
+}
+
+.btn-cantidad {
+  background: #f1f5f9;
+  border: none;
+  color: #334155;
+  font-size: 1.2rem;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.btn-cantidad:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.btn-cantidad:disabled {
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.valor-cantidad {
+  width: 50px;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
 @media (max-width: 768px) {
   .admin-panel-grid {
     grid-template-columns: 1fr;

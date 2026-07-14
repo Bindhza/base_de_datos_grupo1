@@ -44,4 +44,6 @@ urlpatterns = [
     path('api/entregas/<int:id_entrega>/despachar/', views.despachar, name='despachar'),
     path('api/productos/lanzar_descuento/', views.lanzar_oferta, name='lanzar_oferta'),
     path('api/productos/obtener_producto/<int:sku>/', views.obtener_producto, name='obtener_producto'),
+    path('api/checkout/', views.procesar_checkout, name='procesar_checkout'),
+    path('api/sucursales/', views.obtener_sucursales, name='obtener_sucursales'),
 ]
