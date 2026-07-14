@@ -33,7 +33,7 @@ export function AuthProvider({ children }) {
     setRol(data.rol);
     setRut(rutIngresado);
     setNombre(data.nombre);
-    setNombre(data.apellido);
+    setApellido(data.apellido);
   }
 
   function logout() {

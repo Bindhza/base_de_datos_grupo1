@@ -20,11 +20,11 @@ export async function fetchAutenticado(path, opciones = {}) {
     localStorage.removeItem('token');
     localStorage.removeItem('rol');
     localStorage.removeItem('rut');
-    throw new Error('Sesión expirada, iniciá sesión de nuevo');
+    throw new Error('Sesión expirada, inicia sesión de nuevo');
   }
 
   if (res.status === 403) {
-    throw new Error('No tenés permisos para esta acción');
+    throw new Error('No tienes permisos para esta acción');
   }
 
   return res;
