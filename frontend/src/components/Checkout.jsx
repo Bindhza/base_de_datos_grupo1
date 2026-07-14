@@ -4,6 +4,7 @@ import { useAuth } from '../useAuth';
 import { useNavigate } from 'react-router-dom';
 import { fetchAutenticado } from '../api';
 import { formatearRut } from '../utils/FormatoRut';
+import { comunasChile } from '../utils/comunasChile';
 import './Checkout.css';
 
 function Checkout() {
@@ -145,7 +146,12 @@ function Checkout() {
                 {tipoEntrega === 'despacho_a_domicilio' && (
                   <div className="sub-form">
                     <label>Comuna</label>
-                    <input type="text" placeholder="Ej: Providencia" value={comuna} onChange={(e) => setComuna(e.target.value)} required />
+                    <select value={comuna} onChange={(e) => setComuna(e.target.value)} required>
+                      <option value="">Selecciona una comuna</option>
+                      {comunasChile.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
                     
                     <label style={{ marginTop: '10px' }}>Calle</label>
                     <input type="text" placeholder="Ej: Av. Los Leones" value={calle} onChange={(e) => setCalle(e.target.value)} required />
