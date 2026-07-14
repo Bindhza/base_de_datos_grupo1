@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { fetchAutenticado } from '../api';
 import './LanzarDescuento.css';
 
@@ -13,8 +14,15 @@ const obtenerFechaHoraMinima = () => {
 };
 
 function LanzarDescuento() {
+  const location = useLocation();
+  const getInitialSku = () => {
+    if (location.state?.sku) return location.state.sku;
+    const params = new URLSearchParams(location.search);
+    return params.get('sku') || '';
+  };
+
   const [porcentaje, setPorcentaje] = useState('');
-  const [sku, setSku] = useState('');
+  const [sku, setSku] = useState(getInitialSku());
   const [error, setError] = useState(null);
   const [exito, setExito] = useState(false);
   const [cargando, setCargando] = useState(false);
@@ -22,6 +30,13 @@ function LanzarDescuento() {
   const [fechaFin, setFechaFin] = useState('');
   const [descripcionProducto, setDescripcionProducto] = useState('');
   const [precioProducto, setPrecioProducto] = useState('');
+
+  useEffect(() => {
+    const initialSku = getInitialSku();
+    if (initialSku) {
+      obtenerInfoProducto(null, initialSku);
+    }
+  }, []);
 
   function manejarCambioPorcentaje(evento) {
     const valor = evento.target.value;
@@ -94,7 +109,7 @@ function LanzarDescuento() {
           descuento: porcentaje,
           fecha_fin: fechaFinConSegundos,
           sku,
-          rut: localStorage.getItem('rut'),
+          rut: location.state?.rut || localStorage.getItem('rut'),
         }),
       });
 
@@ -129,7 +144,7 @@ function LanzarDescuento() {
               type="number"
               value={porcentaje}
               onChange={manejarCambioPorcentaje}
-              placeholder="50"
+              placeholder="Ej. 50"
               min="1"
               max="100"
               required
