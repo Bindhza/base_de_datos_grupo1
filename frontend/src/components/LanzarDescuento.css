@@ -1,10 +1,11 @@
 .discount-contenedor {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   min-height: 80vh;
-  padding: 20px;
+  padding: 40px 20px;
   box-sizing: border-box;
+  width: 100%;
 }
 
 .discount-form {
@@ -182,4 +183,105 @@
   background: #cbd5e1;
   color: #94a3b8;
   cursor: not-allowed;
+}
+
+/* Layout and Grid */
+.discount-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  width: 100%;
+  max-width: 1000px;
+}
+
+/* Report Section */
+.discount-reporte-seccion {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.discount-reporte-seccion h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+/* Table styling */
+.tabla-reporte-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.tabla-reporte {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.tabla-reporte th,
+.tabla-reporte td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tabla-reporte th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.tabla-reporte tr:last-child td {
+  border-bottom: none;
+}
+
+.tabla-reporte tr:hover {
+  background-color: #f8fafc;
+}
+
+.celda-derecha {
+  text-align: right;
+}
+
+.destacado-descuento {
+  color: #e53e3e;
+  font-weight: 700;
+}
+
+.precio-oferta {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.destacado-ahorro {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.nombre-producto-celda {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.estado-info {
+  color: #64748b;
+  font-size: 0.95rem;
+  text-align: center;
+  margin: 20px 0;
 }

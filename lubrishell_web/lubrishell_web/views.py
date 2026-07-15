@@ -1143,6 +1143,59 @@ def variacion_precios(request):
         resultados = dictfetchall(cursor)
 
     return JsonResponse(resultados, safe=False)
+
+@login_requerido
+@rol_requerido('administrador', 'jefe_bodega')
+def reporte_descuentos_altos(request):
+    """Obtiene ofertas con descuento mayor o igual al 30% y el ahorro total."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            '''
+            SELECT o.id_oferta, p.SKU, p.nombre, o.descuento, 
+                   pv.precio_venta AS precio_normal, 
+                   pv.precio_venta * (100 - o.descuento) / 100 AS precio_con_descuento, 
+                   pv.precio_venta - (pv.precio_venta * (100 - o.descuento) / 100) AS ahorro 
+            FROM lubrishell.Oferta o 
+            JOIN lubrishell.Producto p ON p.SKU = o.sku_producto 
+            JOIN lubrishell.PrecioVenta pv ON pv.SKU_producto = o.sku_producto 
+            WHERE o.descuento >= 30 
+              AND pv.fecha_vigencia = (
+                  SELECT MAX(pv2.fecha_vigencia) 
+                  FROM lubrishell.PrecioVenta pv2 
+                  WHERE pv2.SKU_producto = o.sku_producto
+              ) 
+            ORDER BY o.descuento DESC;
+            '''
+        )
+        resultados = dictfetchall(cursor)
+
+    return JsonResponse(resultados, safe=False)
+
+@login_requerido
+@rol_requerido('administrador', 'jefe_bodega')
+def reporte_despachos_tardados(request):
+    """Obtiene los 10 despachos que más tardaron desde su preparación hasta su despacho."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            '''
+            SELECT 
+                e.id_entrega, 
+                e.id_orden_compra, 
+                prep.fecha_cambio AS fecha_preparacion, 
+                desp.fecha_cambio AS fecha_despacho, 
+                CAST(desp.fecha_cambio - prep.fecha_cambio AS TEXT) AS tiempo 
+            FROM lubrishell.Entrega e 
+            JOIN lubrishell.despachodomicilio_estadoentregadomicilio jp ON jp.id_entrega = e.id_entrega 
+            JOIN lubrishell.Estado_entrega_domicilio prep ON prep.id_estado_e_d = jp.id_estado_e_d AND prep.estado_d = 'en_preparacion' 
+            JOIN lubrishell.despachodomicilio_estadoentregadomicilio jd ON jd.id_entrega = e.id_entrega 
+            JOIN lubrishell.Estado_entrega_domicilio desp ON desp.id_estado_e_d = jd.id_estado_e_d AND desp.estado_d = 'despachada' 
+            WHERE e.tipo_entrega = 'despacho_a_domicilio' 
+            ORDER BY (desp.fecha_cambio - prep.fecha_cambio) DESC 
+            LIMIT 10;
+            '''
+        )
+        resultados = dictfetchall(cursor)
+
     return JsonResponse(resultados, safe=False)
 
 def obtener_sucursales(request):

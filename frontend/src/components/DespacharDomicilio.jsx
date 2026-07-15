@@ -12,6 +12,11 @@ function DespacharDomicilio() {
   const [mensaje, setMensaje] = useState(null);
   const [enviandoId, setEnviandoId] = useState(null);
 
+  // Estados para estadísticas de tardanza
+  const [reporteTardanza, setReporteTardanza] = useState([]);
+  const [cargandoReporte, setCargandoReporte] = useState(false);
+  const [errorReporte, setErrorReporte] = useState(null);
+
   const cargarEntregas = useCallback(() => {
     setCargando(true);
     setError(null);
@@ -22,7 +27,6 @@ function DespacharDomicilio() {
       })
       .then((data) => {
         setEntregas(data);
-        // Inicializar códigos vacíos
         const iniciales = {};
         data.forEach((e) => {
           iniciales[e.id_entrega] = e.codigo_seguimiento || '';
@@ -33,9 +37,32 @@ function DespacharDomicilio() {
       .finally(() => setCargando(false));
   }, []);
 
+  const cargarReporte = useCallback(() => {
+    setCargandoReporte(true);
+    setErrorReporte(null);
+    fetchAutenticado('/entregas/reporte-despachos-tardados/')
+      .then((res) => {
+        if (!res.ok) throw new Error('No se pudo cargar el reporte de tardanza');
+        return res.json();
+      })
+      .then((data) => setReporteTardanza(data))
+      .catch((err) => setErrorReporte(err.message))
+      .finally(() => setCargandoReporte(false));
+  }, []);
+
   useEffect(() => {
     cargarEntregas();
-  }, [cargarEntregas]);
+    cargarReporte();
+  }, [cargarEntregas, cargarReporte]);
+
+  const formatearIntervalo = (intervalo) => {
+    if (!intervalo) return '-';
+    return intervalo
+      .replace('days', 'días')
+      .replace('day', 'día')
+      .replace('mons', 'meses')
+      .replace('mon', 'mes');
+  };
 
   const registrarDespacho = async (idEntrega) => {
     setMensaje(null);
@@ -65,6 +92,7 @@ function DespacharDomicilio() {
 
       setMensaje({ tipo: 'exito', texto: `Despacho de entrega #${idEntrega} registrado exitosamente` });
       setEntregas((previas) => previas.filter((e) => e.id_entrega !== idEntrega));
+      cargarReporte();
     } catch (err) {
       setMensaje({ tipo: 'error', texto: err.message });
     } finally {
@@ -89,6 +117,52 @@ function DespacharDomicilio() {
           {mensaje.texto}
         </p>
       )}
+
+      <div className="despacho-reporte-seccion" style={{ marginBottom: '40px' }}>
+        <h2 className="reporte-titulo" style={{ fontSize: '1.3rem', color: '#1e293b', marginBottom: '16px', fontWeight: '700' }}>
+          Los 10 Despachos que más tardaron desde su preparación
+        </h2>
+        
+        {cargandoReporte && <p className="entregas-estado">Cargando estadísticas...</p>}
+        {errorReporte && <p className="entregas-estado entregas-estado-error">{errorReporte}</p>}
+        
+        {!cargandoReporte && !errorReporte && reporteTardanza.length === 0 && (
+          <p className="entregas-estado">No hay registros de despachos despachados para calcular tiempos.</p>
+        )}
+
+        {!cargandoReporte && !errorReporte && reporteTardanza.length > 0 && (
+          <div className="entregas-tabla-envoltorio">
+            <table className="entregas-tabla">
+              <thead>
+                <tr>
+                  <th>Entrega #</th>
+                  <th>Orden #</th>
+                  <th>Fecha Preparación</th>
+                  <th>Fecha Despacho</th>
+                  <th style={{ textAlign: 'right' }}>Tiempo de Demora</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reporteTardanza.map((r) => (
+                  <tr key={r.id_entrega}>
+                    <td>{r.id_entrega}</td>
+                    <td>{r.id_orden_compra}</td>
+                    <td>{r.fecha_preparacion ? new Date(r.fecha_preparacion).toLocaleString('es-CL') : '-'}</td>
+                    <td>{r.fecha_despacho ? new Date(r.fecha_despacho).toLocaleString('es-CL') : '-'}</td>
+                    <td style={{ textAlign: 'right', fontWeight: '700', color: '#d94e3f' }}>
+                      {formatearIntervalo(r.tiempo)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <h2 style={{ fontSize: '1.3rem', color: '#1e293b', marginBottom: '16px', fontWeight: '700' }}>
+        Pendientes de Despacho
+      </h2>
 
       {entregas.length === 0 ? (
         <p className="entregas-estado">No hay entregas a domicilio pendientes de despacho.</p>
