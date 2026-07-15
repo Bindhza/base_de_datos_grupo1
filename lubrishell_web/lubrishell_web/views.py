@@ -326,6 +326,18 @@ def lanzar_oferta(request):
                     return JsonResponse({'error': f'El producto con SKU {sku} no existe'}, status=404)
 
                 cursor.execute(
+                    '''
+                    SELECT COUNT(*) FROM lubrishell.Oferta
+                    WHERE sku_producto = %s
+                    AND fecha_fin >= %s::timestamp
+                    FOR UPDATE
+                    ''',
+                    [sku, fecha_inicio]
+                )
+                solapadas = cursor.fetchone()[0]
+                if solapadas > 0:
+                    return JsonResponse({'error': f'El producto con SKU {sku} ya tiene una oferta vigente'}, status=409)
+                cursor.execute(
                     'INSERT INTO lubrishell.Oferta ' 
                     '(fecha_creacion, fecha_inicio, descuento, fecha_fin, sku_producto, rut_creador) '
                     'VALUES (LEAST(NOW(), COALESCE(%s, NOW())), COALESCE(%s, NOW()), %s, %s, %s, %s)',
