@@ -48,7 +48,10 @@ export function CartProvider({ children }) {
   };
 
   const cartTotal = cart.reduce(
-    (acc, item) => acc + (item.precio || 0) * item.cantidad,
+    (acc, item) => {
+      const activePrice = item.precio_nuevo ? Number(item.precio_nuevo) : (item.precio || 0);
+      return acc + activePrice * item.cantidad;
+    },
     0
   );
 

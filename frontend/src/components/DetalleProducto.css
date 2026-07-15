@@ -147,6 +147,65 @@
   font-weight: 600;
   color: #2b5f8a;
   margin: 0 0 16px;
+  text-align: center;
+}
+
+.detalle-producto-precio-contenedor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 16px;
+}
+
+.detalle-producto-precio-fila {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.detalle-producto-precio-original {
+  font-size: 0.95rem;
+  color: #8a94a3;
+  text-decoration: line-through;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.detalle-producto-descuento-badge {
+  background-color: #e53e3e;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  animation: pulse-badge 2s infinite;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.detalle-producto-precio-nuevo {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #e53e3e;
+  line-height: 1;
+}
+
+@keyframes pulse-badge {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* Admin Panel */

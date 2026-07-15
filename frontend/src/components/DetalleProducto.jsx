@@ -155,9 +155,25 @@ function DetalleProductoInterno({ sku }) {
             <p className="detalle-producto-categoria">{producto.categoria}</p>
           )}
 
-          <p className="detalle-producto-precio">
-            Precio: {producto.precio ? `$${producto.precio}` : 'No definido'}
-          </p>
+          {producto.descuento > 0 && producto.precio_nuevo ? (
+            <div className="detalle-producto-precio-contenedor">
+              <span className="detalle-producto-precio-original">
+                {producto.precio ? `$${Number(producto.precio).toLocaleString('es-CL')}` : ''}
+              </span>
+              <div className="detalle-producto-precio-fila">
+                <span className="detalle-producto-precio-nuevo">
+                  ${Number(producto.precio_nuevo).toLocaleString('es-CL')}
+                </span>
+                <span className="detalle-producto-descuento-badge">
+                  {producto.descuento}% OFF
+                </span>
+              </div>
+            </div>
+          ) : (
+            <p className="detalle-producto-precio">
+              Precio: {producto.precio ? `$${Number(producto.precio).toLocaleString('es-CL')}` : 'No definido'}
+            </p>
+          )}
 
           {producto.descripcion && (
             <p className="detalle-producto-descripcion">{producto.descripcion}</p>

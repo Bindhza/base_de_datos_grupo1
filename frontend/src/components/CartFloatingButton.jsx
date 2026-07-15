@@ -38,7 +38,21 @@ function CartFloatingButton() {
                   <div key={item.sku} className="cart-item">
                     <div className="cart-item-info">
                       <p className="cart-item-name">{item.nombre}</p>
-                      <p className="cart-item-price">{formatearMoneda(item.precio)} c/u</p>
+                      <p className="cart-item-price">
+                        {item.precio_nuevo ? (
+                          <>
+                            <span className="cart-item-price-original" style={{ textDecoration: 'line-through', color: '#8a94a3', marginRight: '8px', fontSize: '0.85rem' }}>
+                              {formatearMoneda(item.precio)}
+                            </span>
+                            <span className="cart-item-price-discounted" style={{ color: '#e53e3e', fontWeight: 'bold' }}>
+                              {formatearMoneda(Number(item.precio_nuevo))}
+                            </span>
+                            <span style={{ fontSize: '0.85rem', color: '#5a6472', marginLeft: '4px' }}> c/u</span>
+                          </>
+                        ) : (
+                          `${formatearMoneda(item.precio)} c/u`
+                        )}
+                      </p>
                     </div>
                     <div className="cart-item-actions">
                       <input

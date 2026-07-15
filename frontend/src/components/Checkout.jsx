@@ -268,12 +268,24 @@ function Checkout() {
           <div className="checkout-summary">
             <h3>Resumen del Pedido</h3>
             <div className="summary-items">
-              {cart.map(item => (
-                <div key={item.sku} className="summary-item">
-                  <span>{item.nombre} x{item.cantidad}</span>
-                  <span>{formatearMoneda(item.precio * item.cantidad)}</span>
-                </div>
-              ))}
+              {cart.map(item => {
+                const activePrice = item.precio_nuevo ? Number(item.precio_nuevo) : (item.precio || 0);
+                return (
+                  <div key={item.sku} className="summary-item">
+                    <span>{item.nombre} x{item.cantidad}</span>
+                    <span>
+                      {item.precio_nuevo && (
+                        <span style={{ textDecoration: 'line-through', color: '#8a94a3', marginRight: '8px', fontSize: '0.9rem' }}>
+                          {formatearMoneda(item.precio * item.cantidad)}
+                        </span>
+                      )}
+                      <span style={item.precio_nuevo ? { color: '#e53e3e', fontWeight: 'bold' } : {}}>
+                        {formatearMoneda(activePrice * item.cantidad)}
+                      </span>
+                    </span>
+                  </div>
+                );
+              })}
             </div>
             <div className="summary-total">
               <strong>Total a Pagar</strong>
