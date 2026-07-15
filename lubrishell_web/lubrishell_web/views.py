@@ -1159,6 +1159,8 @@ def procesar_checkout(request):
         datos_calle = body.get('calle', '')
         datos_numero = body.get('numero', '')
         
+        id_sucursal = body.get('id_sucursal')
+        
         rut_cliente = request.rut
         
         if not carrito_raw:
@@ -1284,6 +1286,24 @@ def procesar_checkout(request):
 
                         cursor.execute('''
                             INSERT INTO lubrishell.despachodomicilio_estadoentregadomicilio (id_entrega, id_estado_e_d)
+                            VALUES (%s, %s)
+                        ''', [nuevo_id_entrega, nuevo_id_estado])
+                    else:
+                        cursor.execute('''
+                            INSERT INTO lubrishell.EntregaEnSucursal (id_entrega, id_sucursal)
+                            VALUES (%s, %s)
+                        ''', [nuevo_id_entrega, id_sucursal])
+
+                        cursor.execute('''
+                            INSERT INTO lubrishell.Estado_entrega_sucursal (estado_s, fecha_cambio)
+                            VALUES (%s, CURRENT_TIMESTAMP)
+                            RETURNING id_estado_e_s;
+                        ''', ['en_preparacion']) 
+
+                        nuevo_id_estado = cursor.fetchone()[0]
+
+                        cursor.execute('''
+                            INSERT INTO lubrishell.EntregaEnSucursal_EstadoEntregaSucursal (id_entrega, id_estado_e_s)
                             VALUES (%s, %s)
                         ''', [nuevo_id_entrega, nuevo_id_estado])
                 
