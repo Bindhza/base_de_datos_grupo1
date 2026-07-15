@@ -11,6 +11,7 @@ import {
   Activity,
   PackageCheck,
   Truck,
+  Tag,
 } from 'lucide-react';
 import { useAuth } from '../useAuth';
 import './Dashboard.css';
@@ -28,6 +29,12 @@ function Dashboard() {
       icono: Package,
       titulo: 'Ver productos',
       descripcion: 'Explora el catálogo completo de productos',
+    },
+    {
+      to: '/productos/reporte-descuentos',
+      icono: Tag,
+      titulo: 'Reporte de Grandes Ofertas',
+      descripcion: 'Consulta los productos con descuentos iguales o mayores al 30% y su ahorro total',
     },
   ];
 
@@ -63,6 +70,7 @@ function Dashboard() {
         titulo: 'Variación de Precios',
         descripcion: 'Analiza el historial y fluctuación de los precios de venta',
       },
+
       {
         to: '/entregas/preparar',
         icono: PackageCheck,

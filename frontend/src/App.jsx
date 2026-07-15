@@ -19,6 +19,7 @@ import EntregasRetiro from './components/EntregasRetiro';
 import DespacharDomicilio from './components/DespacharDomicilio';
 import RutaProtegida from './components/RutaProtegida';
 import LanzarDescuento from './components/LanzarDescuento';
+import ReporteDescuentos from './components/ReporteDescuentos';
 import { useAuth } from './useAuth';
 import './App.css';
 
@@ -211,6 +212,10 @@ function App() {
                 <VariacionPrecios />
               </RutaProtegida>
               }
+          />
+          <Route
+            path="/productos/reporte-descuentos/"
+            element={<ReporteDescuentos />}
           />
           <Route
             path="/entregas/preparar"

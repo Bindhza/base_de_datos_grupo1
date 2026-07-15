@@ -31,39 +31,11 @@ function LanzarDescuento() {
   const [descripcionProducto, setDescripcionProducto] = useState('');
   const [precioProducto, setPrecioProducto] = useState('');
 
-  // Estados para el reporte de estadísticas
-  const [reporteDescuentos, setReporteDescuentos] = useState([]);
-  const [cargandoReporte, setCargandoReporte] = useState(false);
-  const [errorReporte, setErrorReporte] = useState(null);
-
-  const formatearMoneda = (valor) =>
-    new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(valor || 0);
-
-  const obtenerReporte = async () => {
-    setCargandoReporte(true);
-    setErrorReporte(null);
-    try {
-      const res = await fetchAutenticado('/productos/reporte-descuentos/');
-      if (res.ok) {
-        const data = await res.json();
-        setReporteDescuentos(data);
-      } else {
-        const data = await res.json();
-        setErrorReporte(data.error || 'Error al obtener el reporte');
-      }
-    } catch (err) {
-      setErrorReporte(err.message);
-    } finally {
-      setCargandoReporte(false);
-    }
-  };
-
   useEffect(() => {
     const initialSku = getInitialSku();
     if (initialSku) {
       obtenerInfoProducto(null, initialSku);
     }
-    obtenerReporte();
   }, []);
 
   function manejarCambioPorcentaje(evento) {
@@ -150,7 +122,6 @@ function LanzarDescuento() {
       setExito(true);
       setPorcentaje('');
       setSku('');
-      obtenerReporte();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -160,121 +131,79 @@ function LanzarDescuento() {
 
   return (
     <div className="discount-contenedor">
-      <div className="discount-grid">
-        <form className="discount-form" onSubmit={manejarSubmit}>
-          <h1>Lanzar Descuento</h1>
+      <form className="discount-form" onSubmit={manejarSubmit}>
+        <h1>Lanzar Descuento</h1>
 
-          {error && <p className="discount-error">{error}</p>}
-          {exito && <p className="discount-exito">¡Descuento lanzado exitosamente!</p>}
+        {error && <p className="discount-error">{error}</p>}
+        {exito && <p className="discount-exito">¡Descuento lanzado exitosamente!</p>}
 
-          <label className="discount-porcent-label">
-            PORCENTAJE DE DESCUENTO A APLICAR
-            <div className="discount-input-group">
-              <input
-                type="number"
-                value={porcentaje}
-                onChange={manejarCambioPorcentaje}
-                placeholder="Ej. 50"
-                min="1"
-                max="100"
-                required
-                disabled={cargando}
-              />
-              <span className="discount-addon">%</span>
-            </div>
-          </label>
-
-          <label className="sku-label">
-            SKU DEL PRODUCTO
+        <label className="discount-porcent-label">
+          PORCENTAJE DE DESCUENTO A APLICAR
+          <div className="discount-input-group">
             <input
               type="number"
-              value={sku}
-              onChange={manejarCambioSku}
-              placeholder="SKU"
-              min="0"
+              value={porcentaje}
+              onChange={manejarCambioPorcentaje}
+              placeholder="Ej. 50"
+              min="1"
+              max="100"
               required
               disabled={cargando}
-              onBlur={(evento) => obtenerInfoProducto(evento, sku)}
             />
-          </label>
+            <span className="discount-addon">%</span>
+          </div>
+        </label>
 
-          <label className="fecha-inicio-label">
-            FECHA DE INICIO
-            <input
-              type="datetime-local"
-              value={fechaInicio}
-              onChange={manejarCambioFechaInicio}
-              required
-              min={obtenerFechaHoraMinima()}
-              disabled={cargando}
-            />
-          </label>
+        <label className="sku-label">
+          SKU DEL PRODUCTO
+          <input
+            type="number"
+            value={sku}
+            onChange={manejarCambioSku}
+            placeholder="SKU"
+            min="0"
+            required
+            disabled={cargando}
+            onBlur={(evento) => obtenerInfoProducto(evento, sku)}
+          />
+        </label>
 
-          <label className="fecha-fin-label">
-            FECHA DE FIN
-            <input
-              type="datetime-local"
-              value={fechaFin}
-              onChange={manejarCambioFechaFin}
-              required
-              min={fechaInicio}
-              disabled={cargando}
-            />
-          </label>
+        <label className="fecha-inicio-label">
+          FECHA DE INICIO
+          <input
+            type="datetime-local"
+            value={fechaInicio}
+            onChange={manejarCambioFechaInicio}
+            required
+            min={obtenerFechaHoraMinima()}
+            disabled={cargando}
+          />
+        </label>
+
+        <label className="fecha-fin-label">
+          FECHA DE FIN
+          <input
+            type="datetime-local"
+            value={fechaFin}
+            onChange={manejarCambioFechaFin}
+            required
+            min={fechaInicio}
+            disabled={cargando}
+          />
+        </label>
 
 
-          <label>
-            <p>Producto: {descripcionProducto == '' ? 'Ingrese un SKU valido' : descripcionProducto}</p>
-            <p>Precio: {precioProducto == '' ? 'Ingrese un SKU valido' : precioProducto}</p>
-            <p>Precio final: {(precioProducto && porcentaje) ? (parseInt(parseInt(precioProducto) - (parseInt(precioProducto) * parseInt(porcentaje)) / 100)) : '-'}</p>
-          </label>
+        <label>
+          <p>Producto: {descripcionProducto == '' ? 'Ingrese un SKU valido' : descripcionProducto}</p>
+          <p>Precio: {precioProducto == '' ? 'Ingrese un SKU valido' : precioProducto}</p>
+          <p>Precio final: {(precioProducto && porcentaje) ? (parseInt(parseInt(precioProducto) - (parseInt(precioProducto) * parseInt(porcentaje)) / 100)) : '-'}</p>
+        </label>
 
-          {/*condiciones de validacion para activar el boton*/}
-          <button type="submit" className="discount-boton" disabled={descripcionProducto == 'Sin descripción' || descripcionProducto == '' || precioProducto == '' || precioProducto == '0' || porcentaje == '' || porcentaje == '0' || fechaInicio == '' || fechaFin == '' || fechaFin < fechaInicio || porcentaje > 100 || porcentaje < 1}>
-            {cargando ? 'Lanzando descuento...' : 'Lanzar Descuento'}
-          </button>
-        </form>
-
-        <div className="discount-reporte-seccion">
-          <h2>Reporte de Grandes Ofertas (≥ 30% Descuento)</h2>
-          
-          {cargandoReporte && <p className="estado-info">Cargando reporte...</p>}
-          {errorReporte && <p className="estado-error">{errorReporte}</p>}
-          
-          {!cargandoReporte && !errorReporte && reporteDescuentos.length === 0 && (
-            <p className="estado-info">No hay ofertas vigentes con descuento ≥ 30%.</p>
-          )}
-
-          {!cargandoReporte && !errorReporte && reporteDescuentos.length > 0 && (
-            <div className="tabla-reporte-wrapper">
-              <table className="tabla-reporte">
-                <thead>
-                  <tr>
-                    <th>SKU</th>
-                    <th>Producto</th>
-                    <th className="celda-derecha">Descuento</th>
-                    <th className="celda-derecha">Precio Normal</th>
-                    <th className="celda-derecha">Precio Oferta</th>
-                    <th className="celda-derecha">Ahorro</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reporteDescuentos.map((o) => (
-                    <tr key={o.id_oferta}>
-                      <td>{o.sku}</td>
-                      <td className="nombre-producto-celda">{o.nombre}</td>
-                      <td className="celda-derecha destacado-descuento">-{o.descuento}%</td>
-                      <td className="celda-derecha">{formatearMoneda(o.precio_normal)}</td>
-                      <td className="celda-derecha precio-oferta">{formatearMoneda(o.precio_con_descuento)}</td>
-                      <td className="celda-derecha destacado-ahorro">{formatearMoneda(o.ahorro)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
+        {/*condiciones de validacion para activar el boton*/}
+        <button type="submit" className="discount-boton" disabled={descripcionProducto == 'Sin descripción' || descripcionProducto == '' || precioProducto == '' || precioProducto == '0' || porcentaje == '' || porcentaje == '0' || fechaInicio == '' || fechaFin == '' || fechaFin < fechaInicio || porcentaje > 100 || porcentaje < 1}>
+          {cargando ? 'Lanzando descuento...' : 'Lanzar Descuento'}
+        </button>
+      </form>
     </div>
   );
 }

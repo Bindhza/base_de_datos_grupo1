@@ -1,0 +1,119 @@
+.contenedor-reporte-descuentos {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.encabezado-reporte {
+  margin-bottom: 24px;
+}
+
+.encabezado-reporte h2 {
+  margin: 0 0 8px;
+  font-size: 1.8rem;
+  color: #1c2b3a;
+  font-weight: 700;
+}
+
+.descripcion-reporte {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #5a6472;
+  line-height: 1.5;
+}
+
+.tabla-contenedor {
+  background: #ffffff;
+  border: 1px solid #e2e5ea;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.tabla-reporte-descuentos {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.tabla-reporte-descuentos th,
+.tabla-reporte-descuentos td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #e2e5ea;
+}
+
+.tabla-reporte-descuentos th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tabla-reporte-descuentos tr:last-child td {
+  border-bottom: none;
+}
+
+.fila-producto-link {
+  transition: background-color 0.15s ease;
+}
+
+.fila-producto-link:hover {
+  background-color: #f1f5f9;
+}
+
+.col-sku {
+  width: 120px;
+}
+
+.col-nombre {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-detalle {
+  color: #1c2b3a;
+  text-decoration: none;
+  display: block;
+  transition: color 0.15s ease;
+}
+
+.fila-producto-link:hover .link-detalle {
+  color: #2b5f8a;
+  text-decoration: underline;
+}
+
+.celda-derecha {
+  text-align: right;
+}
+
+.destacado-descuento {
+  color: #e53e3e;
+  font-weight: 700;
+}
+
+.precio-oferta {
+  font-weight: 700;
+  color: #e53e3e;
+}
+
+.destacado-ahorro {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.estado-info,
+.estado-error {
+  padding: 40px 24px;
+  text-align: center;
+  font-size: 0.95rem;
+  color: #5a6472;
+}
+
+.estado-error {
+  color: #d94e3f;
+}

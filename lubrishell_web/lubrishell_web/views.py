@@ -1144,8 +1144,6 @@ def variacion_precios(request):
 
     return JsonResponse(resultados, safe=False)
 
-@login_requerido
-@rol_requerido('administrador', 'jefe_bodega')
 def reporte_descuentos_altos(request):
     """Obtiene ofertas con descuento mayor o igual al 30% y el ahorro total."""
     with connection.cursor() as cursor:
