@@ -12,14 +12,21 @@ function Checkout() {
   const { estaLogueado, rol } = useAuth();
   const navigate = useNavigate();
 
+  // Estados de datos de API
   const [sucursales, setSucursales] = useState([]);
   const [cargandoSucursales, setCargandoSucursales] = useState(true);
+  
+  const [razonesSociales, setRazonesSociales] = useState([]);
+  const [giros, setGiros] = useState([]);
+  const [cargandoDatosEmpresa, setCargandoDatosEmpresa] = useState(true);
 
   // Form state
   const [tipoEntrega, setTipoEntrega] = useState('entrega_en_sucursal');
   const [tipoDoc, setTipoDoc] = useState('boleta');
   const [metodoPago, setMetodoPago] = useState('debito');
   const [rutEmpresa, setRutEmpresa] = useState('');
+  const [razonSocial, setRazonSocial] = useState('');
+  const [giro, setGiro] = useState('');
   const [idSucursal, setIdSucursal] = useState('');
   const [comuna, setComuna] = useState('');
   const [calle, setCalle] = useState('');
@@ -36,6 +43,7 @@ function Checkout() {
     }
   }, [estaLogueado, rol, navigate]);
 
+  // Fetch de Sucursales
   useEffect(() => {
     fetch('http://localhost:8000/api/sucursales/')
       .then(res => res.json())
@@ -45,9 +53,26 @@ function Checkout() {
         setCargandoSucursales(false);
       })
       .catch(err => {
-        console.error(err);
+        console.error('Error al cargar sucursales:', err);
         setCargandoSucursales(false);
       });
+  }, []);
+
+  // Fetch de Razones Sociales y Giros (Ejecutado en paralelo)
+  useEffect(() => {
+    Promise.all([
+      fetch('http://localhost:8000/api/empresas/razones_sociales/').then(res => res.json()),
+      fetch('http://localhost:8000/api/empresas/giros/').then(res => res.json())
+    ])
+    .then(([dataRazones, dataGiros]) => {
+      setRazonesSociales(dataRazones);
+      setGiros(dataGiros);
+      setCargandoDatosEmpresa(false);
+    })
+    .catch(err => {
+      console.error('Error al cargar datos de empresa:', err);
+      setCargandoDatosEmpresa(false);
+    });
   }, []);
 
   const formatearMoneda = (valor) =>
@@ -57,9 +82,12 @@ function Checkout() {
     e.preventDefault();
     if (cart.length === 0) return;
 
-    if (tipoDoc === 'factura' && !rutEmpresa) {
-      setError('Debes ingresar el RUT de la empresa para solicitar factura.');
-      return;
+    // Validación estricta para factura
+    if (tipoDoc === 'factura') {
+      if (!rutEmpresa || !razonSocial || !giro) {
+        setError('Debes ingresar el RUT, seleccionar una Razón Social y un Giro para solicitar factura.');
+        return;
+      }
     }
 
     setProcesando(true);
@@ -76,7 +104,11 @@ function Checkout() {
           tipo_entrega: tipoEntrega,
           tipo_doc: tipoDoc,
           metodo_pago: metodoPago,
+          // Datos agregados al payload
           rut_empresa: tipoDoc === 'factura' ? rutEmpresa : null,
+          razon_social: tipoDoc === 'factura' ? razonSocial : null,
+          giro: tipoDoc === 'factura' ? giro : null,
+          // Fin datos agregados
           id_sucursal: tipoEntrega === 'entrega_en_sucursal' ? idSucursal : null,
           comuna: tipoEntrega === 'despacho_a_domicilio' ? comuna : null,
           calle: tipoEntrega === 'despacho_a_domicilio' ? calle : null,
@@ -186,6 +218,33 @@ function Checkout() {
                       maxLength={12}
                       required 
                     />
+
+                    {/* Dropdown Razón Social */}
+                  <label style={{ marginTop: '10px' }}>Razón Social</label>
+                  {cargandoDatosEmpresa ? <p>Cargando razones sociales...</p> : (
+                    <select value={razonSocial} onChange={(e) => setRazonSocial(e.target.value)} required>
+                      <option value="">Selecciona una razón social</option>
+                      {razonesSociales.map((rs, index) => (
+                        <option key={index} value={rs.razon_social}>
+                          {rs.razon_social}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+                  {/* Dropdown Giro */}
+                  <label style={{ marginTop: '10px' }}>Giro</label>
+                  {cargandoDatosEmpresa ? <p>Cargando giros...</p> : (
+                    <select value={giro} onChange={(e) => setGiro(e.target.value)} required>
+                      <option value="">Selecciona un giro</option>
+                      {giros.map((g, index) => (
+                        /* Asumimos que la llave es g.giro, pero dejamos g.nombre por si acaso */
+                        <option key={index} value={g.giro || g.nombre}>
+                          {g.giro || g.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   </div>
                 )}
               </div>

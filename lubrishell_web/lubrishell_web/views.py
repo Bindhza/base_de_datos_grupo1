@@ -90,6 +90,24 @@ def ver_productos(request):
         datos = dictfetchall(cursor)
     return JsonResponse(datos, safe=False)
 
+def ver_razones_sociales(request):
+    """Pedimos las razones sociales registradas"""
+    with connection.cursor() as cursor:
+        cursor.execute(
+          'SELECT DISTINCT e.razon_social '
+            'FROM lubrishell.Empresa e'
+        )
+        datos = dictfetchall(cursor)
+    return JsonResponse(datos, safe=False)
+def ver_giros(request):
+    """Pedimos los giros registrados"""
+    with connection.cursor() as cursor:
+        cursor.execute(
+          'SELECT DISTINCT e.giro '  
+            'FROM lubrishell.Empresa e'
+        )
+        datos = dictfetchall(cursor)
+    return JsonResponse(datos, safe=False)
 def ver_detalle_producto(request, sku):
     """Solicitamos toda la informacion de un producto haciendo los joins con marca, categoria y precioventa, donde en 
     esta ultima pedimos el ultimo precio de venta registrado."""
@@ -104,14 +122,24 @@ def ver_detalle_producto(request, sku):
         m.nombre_marca AS marca, 
         c.nombre AS categoria, 
         p.stock,
-        pv.precio_venta AS precio
+        o.descuento,
+        pv.precio_venta AS precio,
+        CASE 
+            WHEN o.descuento IS NOT NULL 
+            THEN ROUND(pv.precio_venta * (1 - o.descuento / 100.0), 0)
+            ELSE NULL
+        END AS precio_nuevo
         FROM lubrishell.Producto p
+
         LEFT JOIN lubrishell.Marca m 
             ON p.id_marca = m.id_marca
         LEFT JOIN lubrishell.Categoria c 
             ON p.id_categoria = c.id_categoria
         LEFT JOIN lubrishell.PrecioVenta pv
             ON p.sku = pv.SKU_producto
+        LEFT JOIN lubrishell.Oferta o 
+            ON o.sku_producto = p.sku 
+            AND NOW() BETWEEN o.fecha_inicio AND o.fecha_fin    
         WHERE p.sku = %s
         ORDER BY pv.fecha_vigencia DESC NULLS LAST
         LIMIT 1;
@@ -1120,25 +1148,43 @@ def procesar_checkout(request):
         
     try:
         body = json.loads(request.body)
-        carrito = body.get('carrito', [])
+        carrito_raw = body.get('carrito', [])
         metodo_pago = body.get('metodo_pago', 'debito')
         tipo_entrega = body.get('tipo_entrega', 'entrega_en_sucursal')
         tipo_doc = body.get('tipo_doc', 'boleta')
         rut_empresa = body.get('rut_empresa', None)
-        
-        # Extracción de datos de dirección (necesarios para despacho)
+        razon_social = body.get('razon_social', None)
+        giro = body.get('giro', None)
         datos_comuna = body.get('comuna', '')
         datos_calle = body.get('calle', '')
         datos_numero = body.get('numero', '')
         
         rut_cliente = request.rut
         
-        if not carrito:
+        if not carrito_raw:
             return JsonResponse({'error': 'El carrito está vacío'}, status=400)
+
+        # Del carrito SOLO se toman sku y cantidad. Cualquier otro campo
+        # que mande el cliente (precio, stock, nombre, etc.) se ignora,
+        # ya que esa información se debe obtener siempre desde la BD.
+        carrito = []
+        for item in carrito_raw:
+            sku = item.get('sku')
+            cantidad = item.get('cantidad')
+
+            if not sku:
+                raise ValueError("Cada item del carrito debe tener un SKU")
+
+            if not isinstance(cantidad, int) or cantidad <= 0:
+                raise ValueError(f"Cantidad inválida para el producto {sku}")
+
+            carrito.append({'sku': sku, 'cantidad': cantidad})
             
         with transaction.atomic():
             with connection.cursor() as cursor:
                 monto_total = 0
+                precios_calculados = {}  # sku -> precio final ya con descuento aplicado
+
                 for item in carrito:
                     sku = item['sku']
                     cantidad = item['cantidad']
@@ -1153,16 +1199,30 @@ def procesar_checkout(request):
                         
                     cursor.execute('UPDATE lubrishell.Producto SET stock = stock - %s WHERE SKU = %s', [cantidad, sku])
                     
+                    # Precio base + oferta vigente (si existe) en una sola consulta
                     cursor.execute('''
-                        SELECT precio_venta FROM lubrishell.PrecioVenta 
-                        WHERE SKU_producto = %s 
-                        ORDER BY fecha_vigencia DESC NULLS LAST LIMIT 1
+                        SELECT 
+                            pv.precio_venta,
+                            CASE 
+                                WHEN o.descuento IS NOT NULL 
+                                THEN ROUND(pv.precio_venta * (1 - o.descuento / 100.0))::int
+                                ELSE pv.precio_venta
+                            END AS precio_final
+                        FROM lubrishell.PrecioVenta pv
+                        LEFT JOIN lubrishell.Oferta o 
+                            ON o.sku_producto = pv.sku_producto 
+                            AND NOW() BETWEEN o.fecha_inicio AND o.fecha_fin
+                        WHERE pv.sku_producto = %s 
+                        ORDER BY pv.fecha_vigencia DESC NULLS LAST, o.fecha_creacion DESC
+                        LIMIT 1
                     ''', [sku])
                     precio_row = cursor.fetchone()
-                    precio = precio_row[0] if precio_row else 0
-                    monto_total += precio * cantidad
+                    precio_final = precio_row[1] if precio_row else 0
 
-                # 1. Crear Orden de Compra PRIMERO (es el padre en el nuevo modelo)
+                    precios_calculados[sku] = precio_final
+                    monto_total += precio_final * cantidad
+
+                # 1. Crear Orden de Compra
                 cursor.execute('''
                     INSERT INTO lubrishell.Orden_Compra (estado, fecha_creacion, metodo_de_pago, RUT_cliente)
                     VALUES (%s, NOW(), %s, %s)
@@ -1171,7 +1231,7 @@ def procesar_checkout(request):
                 
                 id_orden_compra = cursor.fetchone()[0]
 
-                # 2. Crear Documento Tributario SEGUNDO (usando el ID de la orden)
+                # 2. Crear Documento Tributario
                 rut_emisor = '76123456-K'
                 cursor.execute('''
                     INSERT INTO lubrishell.Documento_Tributario (fecha_emision, monto_total, RUT_empresa, id_orden_compra, tipo_doc)
@@ -1181,24 +1241,23 @@ def procesar_checkout(request):
                 
                 folio = cursor.fetchone()[0]
                 
-                # 3. Crear el detalle del documento (Factura o Boleta)
+                # 3. Detalle del documento
                 if tipo_doc == 'factura':
                     if not rut_empresa:
                         raise ValueError("Se requiere RUT empresa para factura")
-                    # Simular validación API: insertar empresa si no existe para evitar error de Foreign Key
                     cursor.execute('SELECT 1 FROM lubrishell.Empresa WHERE RUT = %s', [rut_empresa])
                     if not cursor.fetchone():
-                        cursor.execute('INSERT INTO lubrishell.Empresa VALUES (%s, %s, %s)', [rut_empresa, 'Empresa Generica SA', 'Giro Comercial'])
+                        cursor.execute('INSERT INTO lubrishell.Empresa VALUES (%s, %s, %s)', [rut_empresa, razon_social, giro])
                     
                     cursor.execute('INSERT INTO lubrishell.Factura (folio, RUT_empresa_cliente, estado_factura) VALUES (%s, %s, %s)', [folio, rut_empresa, 'aceptado'])
                 else:
                     cursor.execute('INSERT INTO lubrishell.Boleta (folio, estado_boleta) VALUES (%s, %s)', [folio, 'aceptado'])
                 
-                # 4. Insertar los productos en la orden de compra
+                # 4. Insertar productos en la orden de compra
                 for item in carrito:
                     cursor.execute('INSERT INTO lubrishell.Producto_OrdenDeCompra VALUES (%s, %s, %s)', [item['sku'], id_orden_compra, item['cantidad']])
 
-                # 5. Generar las entregas y sus estados
+                # 5. Entregas y estados
                 for item in carrito:
                     cursor.execute('''
                         INSERT INTO lubrishell.Entrega (cantidad, SKU_producto, tipo_entrega, id_orden_compra)
