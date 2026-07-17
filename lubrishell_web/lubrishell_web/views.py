@@ -321,7 +321,7 @@ def lanzar_oferta(request):
     try:
         with transaction.atomic():
             with connection.cursor() as cursor:
-                cursor.execute('SELECT 1 FROM lubrishell.Producto WHERE SKU = %s', [sku])
+                cursor.execute('SELECT 1 FROM lubrishell.Producto WHERE SKU = %s FOR UPDATE' , [sku])
                 if not cursor.fetchone():
                     return JsonResponse({'error': f'El producto con SKU {sku} no existe'}, status=404)
 
@@ -330,7 +330,6 @@ def lanzar_oferta(request):
                     SELECT COUNT(*) FROM lubrishell.Oferta
                     WHERE sku_producto = %s
                     AND fecha_fin >= %s::timestamp
-                    FOR UPDATE
                     ''',
                     [sku, fecha_inicio]
                 )
