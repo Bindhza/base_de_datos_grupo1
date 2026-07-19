@@ -65,12 +65,6 @@ function Dashboard() {
         descripcion: 'Conoce los productos más abastecidos a la empresa por los proveedores',
       },
       {
-        to: '/productos/mas-vendidos',
-        icono: TrendingUp,
-        titulo: 'Productos más vendidos',
-        descripcion: 'Conoce los productos más vendidos a los clientes',
-      },
-      {
         to: '/productos/variacion-precios',
         icono: Activity,
         titulo: 'Variación de Precios',

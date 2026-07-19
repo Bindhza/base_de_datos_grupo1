@@ -26,7 +26,6 @@ urlpatterns = [
     path('api/productos/marcas/registrar', views.registrar_marca, name='marcas'),
     path('api/productos/inmovilizado/', views.obtener_productos_inmovilizados, name='productos_inmovilizados'),
     path('api/productos/mas-comprados/', views.productos_mas_comprados, name='mas_comprados'),
-    path('api/productos/mas-vendidos/', views.productos_mas_vendidos, name='mas_vendidos'),
     path('api/productos/variacion-precios/', views.variacion_precios, name='variacion_precios'),
     path('api/productos/reporte-descuentos/', views.reporte_descuentos_altos, name='reporte_descuentos'),
     path('api/entregas/reporte-despachos-tardados/', views.reporte_despachos_tardados, name='reporte_despachos_tardados'),
