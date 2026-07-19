@@ -558,7 +558,7 @@ _SQL_ESTADO_ACTUAL_SUCURSAL = '''
     FROM lubrishell.EntregaEnSucursal_EstadoEntregaSucursal pu
     JOIN lubrishell.Estado_entrega_sucursal st ON st.id_estado_e_s = pu.id_estado_e_s
     WHERE pu.id_entrega = %s
-    ORDER BY st.fecha_cambio DESC, st.id_estado_e_s DESC
+    ORDER BY pu.fecha_cambio DESC, st.id_estado_e_s DESC
     LIMIT 1
 '''
 
@@ -567,7 +567,7 @@ _SQL_ESTADO_ACTUAL_DOMICILIO = '''
     FROM lubrishell.despachodomicilio_estadoentregadomicilio pu
     JOIN lubrishell.Estado_entrega_domicilio st ON st.id_estado_e_d = pu.id_estado_e_d
     WHERE pu.id_entrega = %s
-    ORDER BY st.fecha_cambio DESC, st.id_estado_e_d DESC
+    ORDER BY pu.fecha_cambio DESC, st.id_estado_e_d DESC
     LIMIT 1
 '''
 
@@ -598,11 +598,11 @@ def _listar_entregas_sucursal_por_estado(estado):
             LEFT JOIN lubrishell.Producto_OrdenDeCompra poc
                 ON poc.id_orden_compra = e.id_orden_compra AND poc.sku = e.sku_producto
             JOIN LATERAL (
-                SELECT st.estado_s, st.fecha_cambio
+                SELECT st.estado_s, pu.fecha_cambio
                 FROM lubrishell.EntregaEnSucursal_EstadoEntregaSucursal pu
                 JOIN lubrishell.Estado_entrega_sucursal st ON st.id_estado_e_s = pu.id_estado_e_s
                 WHERE pu.id_entrega = e.id_entrega
-                ORDER BY st.fecha_cambio DESC, st.id_estado_e_s DESC
+                ORDER BY pu.fecha_cambio DESC, st.id_estado_e_s DESC
                 LIMIT 1
             ) est ON TRUE
             WHERE est.estado_s = %s
@@ -637,11 +637,11 @@ def _listar_despachos_domicilio_por_estado(estado):
             LEFT JOIN lubrishell.Producto_OrdenDeCompra poc
                 ON poc.id_orden_compra = e.id_orden_compra AND poc.sku = e.sku_producto
             JOIN LATERAL (
-                SELECT st.estado_d, st.fecha_cambio
+                SELECT st.estado_d, pu.fecha_cambio
                 FROM lubrishell.despachodomicilio_estadoentregadomicilio pu
                 JOIN lubrishell.Estado_entrega_domicilio st ON st.id_estado_e_d = pu.id_estado_e_d
                 WHERE pu.id_entrega = e.id_entrega
-                ORDER BY st.fecha_cambio DESC, st.id_estado_e_d DESC
+                ORDER BY pu.fecha_cambio DESC, st.id_estado_e_d DESC
                 LIMIT 1
             ) est ON TRUE
             WHERE est.estado_d = %s
@@ -671,20 +671,20 @@ def _insertar_estado_sucursal(cursor, id_entrega, estado):
 def _actualizar_estado_domicilio(cursor, id_entrega, estado):
     """Ingresa un nuevo estado y lo vincula en la tabla intermedia de la entrega."""
     
-    #  Insertamos el nuevo registro del estado y pedimos el ID generado
+    # Buscamos el id del estado en el catálogo (no se inserta nada ahí)
     cursor.execute('''
-        INSERT INTO lubrishell.estado_entrega_domicilio (estado_d, fecha_cambio)
-        VALUES (%s, NOW())
-        RETURNING id_estado_e_d;
-    ''', [estado])
+        SELECT id_estado_e_d
+        FROM lubrishell.estado_entrega_domicilio
+        WHERE estado_d = %s;
+    ''', [estado])  
     
     # Capturamos el ID devuelto 
     id_estado_e_d = cursor.fetchone()[0]
     
     # Insertamos la relacion en la tabla intermedia usando el ID capturado
     cursor.execute('''
-        INSERT INTO lubrishell.despachodomicilio_estadoentregadomicilio (id_entrega, id_estado_e_d)
-        VALUES (%s, %s);
+        INSERT INTO lubrishell.despachodomicilio_estadoentregadomicilio (id_entrega, fecha_cambio, id_estado_e_d)
+        VALUES (%s, NOW(), %s);
     ''', [id_entrega, id_estado_e_d])
 
 @login_requerido
@@ -1178,16 +1178,16 @@ def reporte_despachos_tardados(request):
             SELECT 
                 e.id_entrega, 
                 e.id_orden_compra, 
-                prep.fecha_cambio AS fecha_preparacion, 
-                desp.fecha_cambio AS fecha_despacho, 
-                CAST(desp.fecha_cambio - prep.fecha_cambio AS TEXT) AS tiempo 
+                jp.fecha_cambio AS fecha_preparacion, 
+                jd.fecha_cambio AS fecha_despacho, 
+                CAST(jd.fecha_cambio - jp.fecha_cambio AS TEXT) AS tiempo 
             FROM lubrishell.Entrega e 
             JOIN lubrishell.despachodomicilio_estadoentregadomicilio jp ON jp.id_entrega = e.id_entrega 
             JOIN lubrishell.Estado_entrega_domicilio prep ON prep.id_estado_e_d = jp.id_estado_e_d AND prep.estado_d = 'en_preparacion' 
             JOIN lubrishell.despachodomicilio_estadoentregadomicilio jd ON jd.id_entrega = e.id_entrega 
             JOIN lubrishell.Estado_entrega_domicilio desp ON desp.id_estado_e_d = jd.id_estado_e_d AND desp.estado_d = 'despachada' 
             WHERE e.tipo_entrega = 'despacho_a_domicilio' 
-            ORDER BY (desp.fecha_cambio - prep.fecha_cambio) DESC 
+            ORDER BY (jd.fecha_cambio - jp.fecha_cambio) DESC 
             LIMIT 10;
             '''
         )
@@ -1338,36 +1338,23 @@ def procesar_checkout(request):
                             VALUES (%s, %s, %s, %s)
                         ''', [nuevo_id_entrega, datos_comuna, datos_calle, datos_numero])
 
-                        cursor.execute('''
-                            INSERT INTO lubrishell.Estado_entrega_domicilio (estado_d, fecha_cambio)
-                            VALUES (%s, CURRENT_TIMESTAMP)
-                            RETURNING id_estado_e_d;
-                        ''', ['en_preparacion']) 
-                        
-                        nuevo_id_estado = cursor.fetchone()[0]
+            
 
                         cursor.execute('''
-                            INSERT INTO lubrishell.despachodomicilio_estadoentregadomicilio (id_entrega, id_estado_e_d)
-                            VALUES (%s, %s)
-                        ''', [nuevo_id_entrega, nuevo_id_estado])
+                            INSERT INTO lubrishell.despachodomicilio_estadoentregadomicilio (id_entrega, fecha_cambio, id_estado_e_d)
+                            VALUES (%s,CURRENT_TIMESTAMP, %s)
+                        ''', [nuevo_id_entrega, 1])
                     else:
                         cursor.execute('''
                             INSERT INTO lubrishell.EntregaEnSucursal (id_entrega, id_sucursal)
                             VALUES (%s, %s)
                         ''', [nuevo_id_entrega, id_sucursal])
 
-                        cursor.execute('''
-                            INSERT INTO lubrishell.Estado_entrega_sucursal (estado_s, fecha_cambio)
-                            VALUES (%s, CURRENT_TIMESTAMP)
-                            RETURNING id_estado_e_s;
-                        ''', ['en_preparacion']) 
-
-                        nuevo_id_estado = cursor.fetchone()[0]
 
                         cursor.execute('''
-                            INSERT INTO lubrishell.EntregaEnSucursal_EstadoEntregaSucursal (id_entrega, id_estado_e_s)
-                            VALUES (%s, %s)
-                        ''', [nuevo_id_entrega, nuevo_id_estado])
+                            INSERT INTO lubrishell.EntregaEnSucursal_EstadoEntregaSucursal (id_entrega, fecha_cambio, id_estado_e_s)
+                            VALUES (%s, CURRENT_TIMESTAMP , %s)
+                        ''', [nuevo_id_entrega, 1])
                 
         return JsonResponse({'mensaje': 'Compra registrada exitosamente', 'id_orden': id_orden_compra})
     except IntegrityError as e:
