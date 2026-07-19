@@ -30,7 +30,7 @@ function ReporteDescuentos() {
       <div className="encabezado-reporte">
         <h2>Reporte de Grandes Ofertas (≥ 30% Descuento)</h2>
         <p className="descripcion-reporte">
-          Muestra los productos con ofertas vigentes cuyo descuento es igual o superior al 30%, calculando el precio final y el ahorro por unidad. Presiona un producto para ver su detalle.
+          Muestra los productos con ofertas (no necesariamente vigentes) cuyo descuento es igual o superior al 30%, calculando el precio final y el ahorro por unidad. Presiona un producto para ver su detalle.
         </p>
       </div>
 
