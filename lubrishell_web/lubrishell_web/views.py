@@ -1120,6 +1120,27 @@ def productos_mas_comprados(request):
 
 @login_requerido
 @rol_requerido('administrador', 'jefe_bodega')
+def productos_mas_vendidos(request):
+    """Obtiene los 10 productos más vendidos a los clientes."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            '''
+            SELECT poc.SKU, p.nombre,
+            SUM(poc.cantidad) AS unidades_vendidas,
+            COUNT(*) AS numero_ordenes
+            FROM lubrishell.Producto_OrdenDeCompra poc
+            JOIN lubrishell.Producto p ON p.SKU = poc.SKU
+            GROUP BY poc.SKU, p.nombre
+            ORDER BY unidades_vendidas DESC
+            LIMIT 10;
+            '''
+        )
+        resultados = dictfetchall(cursor)
+
+    return JsonResponse(resultados, safe=False)
+
+@login_requerido
+@rol_requerido('administrador', 'jefe_bodega')
 def variacion_precios(request):
     """Obtiene un reporte con la variación histórica de los precios de los productos."""
     with connection.cursor() as cursor:

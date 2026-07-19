@@ -11,6 +11,7 @@ import RegistrarProducto from './components/RegistrarProducto';
 import InventarioInmovilizado from './components/InventarioInmovilizado';
 import VariacionPrecios from './components/VariacionPrecios';
 import ProductosMasComprados from './components/ProductosMasComprados';
+import ProductosMasVendidos from './components/ProductosMasVendidos';
 import RegistrarMarca from './components/RegistrarMarca';
 import PrepararEntregas from './components/PrepararEntregas';
 import CartFloatingButton from './components/CartFloatingButton';
@@ -202,6 +203,14 @@ function App() {
             element={
               <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
                 <ProductosMasComprados />
+              </RutaProtegida>
+              }
+          />
+          <Route
+            path="/productos/mas-vendidos/"
+            element={
+              <RutaProtegida rolesPermitidos={['administrador', 'jefe_bodega']}>
+                <ProductosMasVendidos />
               </RutaProtegida>
               }
           />
